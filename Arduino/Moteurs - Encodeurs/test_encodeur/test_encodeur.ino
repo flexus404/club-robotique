@@ -47,10 +47,12 @@ void setup ()  {
   /*
    * On attache les interruptions sur les pins 2 et 21
    */
-  attachInterrupt (0,routineEncodeur1,FALLING);   // interruption sur front descendant pin 2 => Voir fin programme
-  attachInterrupt (3,routineEncodeur2,FALLING);   // interruption sur front descendant pin 21 => Voir fin programme
+   digitalPinToInterrupt
+  //attachInterrupt (0,routineEncodeur1,FALLING);   // interruption sur front descendant pin 2 => Voir fin programme
+  //attachInterrupt (3,routineEncodeur2,FALLING);   // interruption sur front descendant pin 21 => Voir fin programme
   //ATTENTION: Il faut lire la doc de cette fonction pour l'utiliser, ce n'est pas intuitif (on peut consulter la doc sans internet)
-
+  attachInterrupt (digitalPinToInterrupt(2),routineEncodeur1,FALLING);
+  attachInterrupt (digitalPinToInterrupt(20),routineEncodeur2,FALLING);
   Serial.println("Fin d'initialisation");
 }
 
