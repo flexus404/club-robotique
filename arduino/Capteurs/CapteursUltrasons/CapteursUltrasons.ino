@@ -17,8 +17,8 @@
   /* 
    *  Raccordement: rentrez le numéro de pin trig et echo ici, sur lesquels vous avez branché pin et trig
    */
-#define trigPin 8
-#define echoPin 9
+#define trigPin 9
+#define echoPin 10
 
   /*
    * Ici on définit la distance max de détection voulue sur les capteurs, laissez par défault si vous ne savez pas.
@@ -53,7 +53,7 @@ float takeValue(NewPing sonar){
   int taille = 0;
   while (taille < NB_MESURES){              // Tant que l'on a pas le bon nombre de mesures valides
     result = sonar.ping();
-    //Serial.println(result);
+    Serial.println(result);
     if (result != 0) {                      // Si la valeur est 0, elle n'est pas valide
       sum += result / US_ROUNDTRIP_CM;          // On convertis en distance avec la valeur donnée dans la librairie                              // On compte une mesure valide de plus
     }
@@ -78,6 +78,7 @@ void loop() {
   
   uS = takeValue(sonarGauche); //On fait une mesure
   //On affiche le résultat
+  
   Serial.print(uS);
   Serial.println(" cm");
   //delay(250);
