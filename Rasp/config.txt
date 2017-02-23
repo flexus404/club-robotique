@@ -1,0 +1,1 @@
+#Toutes les configs necessaire à l'installation de la raspberry pi
