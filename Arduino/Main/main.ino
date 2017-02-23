@@ -16,16 +16,16 @@
 float uS;
 NewPing sonarGauche(trigPin, echoPin, MAX_DISTANCE);
 
-void setup() 
+void setup()
 {
   Serial.begin (19200); //Pour pouvoir écrire sur le moniteur
   pinMode(ENA, OUTPUT);
   pinMode(IN1, OUTPUT);
   pinMode(IN2, OUTPUT);
-    pinMode(Pin1A,INPUT);
-  pinMode(Pin1B,INPUT); 
+  pinMode(Pin1A,INPUT);
+  pinMode(Pin1B,INPUT);
   pinMode(Pin2A,INPUT);
-  pinMode(Pin2B,INPUT);  
+  pinMode(Pin2B,INPUT);
   //attachInterrupt (0,routineEncodeur1,FALLING);   // interruption sur front descendant pin 2 => Voir fin programme
   //attachInterrupt (3,routineEncodeur2,FALLING);   // interruption sur front descendant pin 21 => Voir fin programme
   //ATTENTION: Il faut lire la doc de cette fonction pour l'utiliser, ce n'est pas intuitif (on peut consulter la doc sans internet)
@@ -34,20 +34,20 @@ void setup()
   Serial.println("Fin d'initialisation");
 }
 
-void loop() 
+void loop()
 {
-    
+
   uS = takeValue(sonarGauche); //On fait une mesure
   //On affiche le résultat
-  
+
   Serial.print(uS);
   Serial.println(" cm");
-  
-  digitalWrite(ENA, HIGH); 
+
+  digitalWrite(ENA, HIGH);
   digitalWrite(IN1, HIGH);
   digitalWrite(IN2, LOW);
   delay(500);
-  digitalWrite(ENA, HIGH); 
+  digitalWrite(ENA, HIGH);
   digitalWrite(IN1, LOW);
   digitalWrite(IN2, HIGH);
   delay(500);
