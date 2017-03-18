@@ -1,4 +1,4 @@
-#include <digitalWriteFast.h> 
+//#include <digitalWriteFast.h> 
 
 /*#define Pin1A 2    //  1ere sortie du codeur1
 #define Pin1B 3    //  2e sortie du codeur1
@@ -64,3 +64,4 @@ void routineEncodeur2()  {
     Serial.print(" Distance 2 : ");
     Serial.println(distance2);
   */
+

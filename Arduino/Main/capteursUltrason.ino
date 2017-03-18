@@ -1,6 +1,4 @@
-
 #include <NewPing.h>
-
 /*
    Ici on définit la distance max de détection voulue sur les capteurs, laissez par défault si vous ne savez pas.
 */
@@ -25,6 +23,8 @@ const float delayMesureCapteur =  int(((2*MAX_DISTANCE)/(VITESSE_SON))*1000);
    Fonction à utiliser pour faire des mesures
    Modifiez a vos risques et périls
 */
+
+
 float takeValue(NewPing sonar) 
 {
   float sum = 0;
@@ -41,5 +41,24 @@ float takeValue(NewPing sonar)
     delay(delayMesureCapteur);          // Delai entre deux mesures pour éviter les interférences
   }
   return sum / NB_MESURES ;                 // On applique la moyenne
+}
+
+void echoCheck(NewPing parlisteSonar[],unsigned int parDistance[], int numCapteur)
+{
+  if (parlisteSonar[numCapteur].check_timer())
+  {
+    parDistance[numCapteur] = parlisteSonar[numCapteur].ping_result / US_ROUNDTRIP_CM;
+  }
+}
+
+void unSeulCapteur(unsigned int parDistance[])
+{
+  for (int i = 0; i < SONAR_NUM; i++)
+  {
+    //Serial.print(i);
+    //Serial.print("=");
+    //Serial.print(distance[i]);
+    //Serial.println("cm ");
+  }
 }
 

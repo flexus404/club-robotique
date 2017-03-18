@@ -8,7 +8,7 @@ int currentDistanceD = 0;
 
 int avancerPas(Stepper parM1, Stepper parM2, int parPas, int parVitesseMax)
 {
-    parM1.setSpeed(parVitesseMax/2);
+    /*parM1.setSpeed(parVitesseMax/2);
     parM2.setSpeed(parVitesseMax/2);
     parM1.step(parPas/4);
     parM2.step(parPas/4);
@@ -16,8 +16,17 @@ int avancerPas(Stepper parM1, Stepper parM2, int parPas, int parVitesseMax)
     parM2.setSpeed(parVitesseMax);
     currentVitesse = parVitesseMax;
     parM1.step(3*parPas/4);
-    parM2.step(3*parPas/4);
+    parM2.step(3*parPas/4);*/
 
+    parM1.setSpeed(parVitesseMax);
+    parM2.setSpeed(parVitesseMax);
+    
+    for (int i = 0; i < parPas; i++)
+    {
+      parM1.step(1);
+      parM2.step(1);
+    }
+    
     currentDistanceG += parPas;
     currentDistanceD += parPas;
     
@@ -26,17 +35,21 @@ int avancerPas(Stepper parM1, Stepper parM2, int parPas, int parVitesseMax)
 
 int avancerTemps(Stepper parM1, Stepper parM2, unsigned long parTemps, int parVitesseMax)
 {
+  
   int i = 0;
   unsigned long debut = millis();
-  
+  Serial.println(parTemps);
   parM1.setSpeed(parVitesseMax);
   parM2.setSpeed(parVitesseMax);
   currentVitesse = parVitesseMax;
   
-  while( debut + parTemps < millis() )
+  while( debut + parTemps > millis() )
   {
-    parM1.step(1);
-    parM2.step(1);
+    /*Serial.print(millis());
+    Serial.print(" : ");
+    Serial.println(parTemps+debut);*/
+    parM1.step(2);
+    parM2.step(2);
     i++;
   }
 
@@ -57,7 +70,7 @@ int gauche(Stepper parM1, Stepper parM2, int parAngle)
   }
   currentDistanceG += j;
   currentDistanceD += j;
-  return 0;
+  //return 0;
 }
 
 void droite(Stepper parM1, Stepper parM2, int parAngle)
@@ -72,7 +85,7 @@ void droite(Stepper parM1, Stepper parM2, int parAngle)
   }
   currentDistanceG += j;
   currentDistanceD += j;
-  return 0;
+  //return 0;
 }
 
 void arret(Stepper parM1, Stepper parM2)
@@ -81,4 +94,5 @@ void arret(Stepper parM1, Stepper parM2)
   parM2.setSpeed(0);
   currentVitesse = 0;
 }
+
 
