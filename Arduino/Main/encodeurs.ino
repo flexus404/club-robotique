@@ -1,6 +1,6 @@
 #include <digitalWriteFast.h> 
 
-#define Pin1A 2    //  1ere sortie du codeur1
+/*#define Pin1A 2    //  1ere sortie du codeur1
 #define Pin1B 3    //  2e sortie du codeur1
 
 #define Pin2A 21    //  1ere sortie du codeur2
@@ -20,8 +20,8 @@ long long int ticks2 = 0;
  * 
  * En cas d'inversement, ne vous embêtez pas à inverser les pins, 
  * changes les -- par des ++ et inversement au sein d'une même routine
- */
-// routine déclanchée quand le signal A passe de haut a bas encodeur 1
+
+//routine déclanchée quand le signal A passe de haut a bas encodeur 1
 void routineEncodeur1()  {     
   if (digitalReadFast2(Pin1A)){       //Si le pin1A est activé
     if (digitalReadFast2(Pin1B)) {    //Ainsi que le pin 1B => voir wikipédia => Cela permet de déterminer le sens de rotation
@@ -54,3 +54,13 @@ void routineEncodeur2()  {
     }
   }
 }
+
+    distance1=(diametre*PI)/(NBR_TICKS)*ticks1;
+    distance2=(diametre*PI)/(NBR_TICKS)*ticks2;
+
+    //Afficher la distance parcourue (facultatif)
+    Serial.print("Distance 1 : ");
+    Serial.print(distance1);
+    Serial.print(" Distance 2 : ");
+    Serial.println(distance2);
+  */
