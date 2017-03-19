@@ -1,0 +1,15 @@
+#liens officiels de la coupe:
+FORUM --> http://www.planete-sciences.org/forums/viewforum.php?f=1&sid=33122682e459dc5bf1173f497dedb696
+SITE OFFICIEL --> http://www.coupederobotique.fr/
+
+#liens vers les autres équipes:
+https://opensabot.wordpress.com/
+http://rco.fr.nf/
+http://www.pm-robotix.eu/
+https://hack.ens.fr/gestion/matos
+http://leskaribous.fr/
+
+#liens de cours, site spécialisé,...
+http://www.les-electroniciens.com/cours-d-electronique
+electrotechnique IUT --> http://www.vgies.com/enseignement/
+http://www.mon-club-elec.fr/pmwiki_mon_club_elec/pmwiki.php?n=MAIN.ArduinoExpertMoteursPAPTestSimple
