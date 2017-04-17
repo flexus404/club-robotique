@@ -2,8 +2,11 @@
 #include <NewPing.h>
 //#include <digitalWriteFast.h>
 #include <Stepper.h>
+#include <AccelStepper.h>
+#include <MultiStepper.h>
 #include <SPI.h>
 #include <Wire.h>
+#include <Servo.h>
 #include "rgb_lcd.h"
 #include "Timer.h"
 
@@ -45,6 +48,7 @@
 //Moteurs pas à pas//
 const int nbPasMoteur = 400;
 const float taille_roue = 7.62;
+const int vitesse_max_ent = 30;
 //Ecran LCD RGB//
 const int colorR = 0;
 const int colorG = 0;
@@ -62,6 +66,8 @@ float uS;
 int i = 0;
 
 ///INITIALISATION OBJETS
+//Le Timer principal
+Timer t;
 //Ecran LCD//
 rgb_lcd lcd;
 //Capteurs ultra-sons//
@@ -71,8 +77,13 @@ NewPing listeSonar[SONAR_NUM] =
   NewPing(trigPin2, echoPin2, MAX_DISTANCE)
 };
 //Moteurs pas à pas//
-Stepper moteurG(nbPasMoteur, moteurGIN1, moteurGIN2, moteurGIN3, moteurGIN4);
-Stepper moteurD(nbPasMoteur, moteurDIN1, moteurDIN2, moteurDIN3, moteurDIN4);
+/*Stepper moteurG(nbPasMoteur, moteurGIN1, moteurGIN2, moteurGIN3, moteurGIN4);
+Stepper moteurD(nbPasMoteur, moteurDIN1, moteurDIN2, moteurDIN3, moteurDIN4);*/
+AccelStepper moteurG(AccelStepper::FULL4WIRE, moteurGIN1, moteurGIN2, moteurGIN3, moteurGIN4);
+AccelStepper moteurD(AccelStepper::FULL4WIRE, moteurDIN1, moteurDIN2, moteurDIN3, moteurDIN4);
+
+MultiStepper moteurs;
+
 //Servomoteurs//
 Servo servos[NB_SERVO] =
 {
@@ -85,11 +96,12 @@ void endProg();
 void echoCheck(NewPing parlisteSonar[],unsigned int parDistance[], int numCapteur);
 void unSeulCapteur(unsigned int parDistance[]);
 float takeValue(NewPing listeSonar);
-int avancerPas(Stepper parM1, Stepper parM2, int parPas, int parVitesseMax);
-int avancerTemps(Stepper parM1, Stepper parM2, unsigned long parTemps, int parVitesseMax);
-int gauche(Stepper parM1, Stepper parM2, int parAngle);
-void droite(Stepper parM1, Stepper parM2, int parAngle);
-void arret(Stepper parM1, Stepper parM2);
+void detectObstacle();
+int avancerPas(MultiStepper parM, long parPas, int parVitesseMax);
+int avancerTemps(MultiStepper parM, unsigned long parTemps, int parVitesseMax);
+void gauche(MultiStepper parM, int parAngle);
+void droite(MultiStepper parM, int parAngle);
+void arret(AccelStepper parM1, AccelStepper parM2);
 void afficherLCD(char msg[]);
 int envoyer(char cmd[]);
 
@@ -97,7 +109,7 @@ int envoyer(char cmd[]);
 void setup()
 {
   Serial.begin (19200); //Pour pouvoir écrire sur le moniteur
-  
+
   pingTimer[0] = millis() + 100;
   for (int i = 0; i < SONAR_NUM ; i++)
   {
@@ -112,7 +124,7 @@ void setup()
   }
   Serial.println("Servo done");
 
-  pinMode(moteurGENA, OUTPUT);
+  /*pinMode(moteurGENA, OUTPUT);
   pinMode(moteurGENB, OUTPUT);
   pinMode(moteurDENA, OUTPUT);
   pinMode(moteurDENB, OUTPUT);
@@ -121,6 +133,16 @@ void setup()
   digitalWrite(moteurGENB, HIGH);
   digitalWrite(moteurDENA, HIGH);
   digitalWrite(moteurDENB, HIGH);
+  Serial.println("Stepper done");*/
+
+  moteurG.setMaxSpeed(vitesse_max_ent);
+  moteurD.setMaxSpeed(vitesse_max_ent);
+  moteurG.setCurrentPosition(0);
+  moteurD.setCurrentPosition(0);
+
+  moteurs.addStepper(moteurG);
+  moteurs.addStepper(moteurD);
+
   Serial.println("Stepper done");
 
   pinMode(MISO, OUTPUT);
@@ -129,6 +151,10 @@ void setup()
   process_it = false;
   SPI.attachInterrupt();
   Serial.println("SPI done");
+
+  //int tickSonar = t.every(500, detectObstacle);
+  Serial.println("Timer done");
+
   /*
   lcd.begin(16, 2);
   lcd.setRGB(colorR, colorG, colorB);
@@ -143,7 +169,6 @@ void setup()
   queue[5] = 5000;
   queue[6] = 0;
 
-
   Serial.println("Fin d'initialisation");
 }
 
@@ -151,6 +176,7 @@ void setup()
 ///BOUCLE PRINCIPALE///
 void loop()
 {
+    t.update();
   //afficherLCD('Club Robot');
   //lcd.print("Club Robot");
   int i = 0;
@@ -172,31 +198,33 @@ void loop()
             listeSonar.ping_median();
           }
         }*/
-      
+
         //uS = takeValue(listeSonarGauche); //On fait une mesure
         //On affiche le résultat
-      
+
         //Serial.println(uS);
         //Serial.println(" cm");
         //Serial.print(delayMesureCapteur);
         break;
       case 2: //on avance d'un certain nombre de pas
         i++;
-        avancerPas(moteurG, moteurD, queue[i], 100);
+        /*moteurG.setSpeed(vitesse_max_ent);
+        moteurD.setSpeed(vitesse_max_ent);*/
+        avancerPas(moteurs, queue[i], vitesse_max_ent);
         break;
       case 3:
         i++; //on avance pendant un certain temps
-        avancerTemps(moteurG, moteurD, queue[i], 100);
+        avancerTemps(moteurs, (queue[i]), vitesse_max_ent);
         break;
       case 4:
         i++;
         if (process_it)
         {
-          buf [pos] = 0;  
+          buf [pos] = 0;
           //Serial.println (buf);
           pos = 0;
           process_it = false;
-        } 
+        }
         break;
       case 5:
         break;
@@ -212,8 +240,8 @@ void loop()
         break;
       //default:
       //break;
-      
-      
+
+
     }
     i++;
     Serial.println("");
@@ -233,5 +261,3 @@ void endProg()
   arret(moteurG, moteurD);
   while(1);
 }
-
-

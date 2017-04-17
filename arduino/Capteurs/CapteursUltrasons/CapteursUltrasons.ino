@@ -1,20 +1,20 @@
-/* 
+/*
  * Code capteurs de la coupe de France 2016
- * Auteurs: Lorin MACE, flavien Ronteix--jacquet avec Mael Helbert 
- * 
+ * Auteurs: Lorin MACE, flavien Ronteix--jacquet avec Mael Helbert
+ *
  * Consignes d'installation: ajouter Newping.h dans les librairies arduino + mettre la ligne suivante
  */
 #include <NewPing.h>
 
  /*
-  * Branchement: 
+  * Branchement:
   * VCC ou 5V sur le 5V de l'arduino                                    (fil rouge de préférence)
   * GND sur la masse de l'arduino                                       (fil noir de préférence)
   * Trig sur un pin de l'arduino                                        (Il es conseillé de choisir une couleur pour trig et une couleur pour echo pour une plus grande clarté)
-  * Echo sur un autre pin 
+  * Echo sur un autre pin
   */
 
-  /* 
+  /*
    *  Raccordement: rentrez le numéro de pin trig et echo ici, sur lesquels vous avez branché pin et trig
    */
 #define trigPin 12
@@ -47,9 +47,10 @@ float uS;
  * Fonction à utiliser pour faire des mesures
  * Modifiez a vos risques et périls
  */
-float takeValue(NewPing sonar){
-  float sum = 0;                            
-  int result;                               // Attention, si on ne fait pas la conversion directe, les valeurs sont tellement grandes qu'il faut utiliser un long 
+float takeValue(NewPing sonar)
+{
+  float sum = 0;
+  int result;                               // Attention, si on ne fait pas la conversion directe, les valeurs sont tellement grandes qu'il faut utiliser un long
   int taille = 0;
   while (taille < NB_MESURES){              // Tant que l'on a pas le bon nombre de mesures valides
     result = sonar.ping();
@@ -63,10 +64,13 @@ float takeValue(NewPing sonar){
   return sum/NB_MESURES ;                   // On applique la moyenne
 }
 
+void detectObstacle()
+{ //return la valeur du premier capteur qui detecte l'obstacle
+}
 
 
 
-NewPing sonarGauche(trigPin, echoPin, MAX_DISTANCE);
+/*NewPing sonarGauche(trigPin, echoPin, MAX_DISTANCE);
 //Fonction appliquée au démarrage
 void setup() {
   Serial.begin (19200); //Pour pouvoir écrire sur le moniteur
@@ -75,13 +79,12 @@ void setup() {
 
 //Boucle principale
 void loop() {
-  
+
   uS = takeValue(sonarGauche); //On fait une mesure
   //On affiche le résultat
-  
+
   Serial.print(uS);
   Serial.println(" cm");
   //delay(250);
-  
-}
 
+}*/
