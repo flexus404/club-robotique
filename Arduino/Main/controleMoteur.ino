@@ -8,7 +8,7 @@ static int currentVitesse = 0;
 static int currentDistanceG = 0;
 static int currentDistanceD = 0;
 
-int avancerPas(MultiStepper parM, long parPas, int parVitesseMax)
+int avancerPas(AccelStepper parM1, AccelStepper parM2, long parPas, int parVitesseMax)
 {
   /*
     parM1.setSpeed(parVitesseMax);
@@ -23,8 +23,27 @@ int avancerPas(MultiStepper parM, long parPas, int parVitesseMax)
     currentDistanceG += parPas;
     currentDistanceD += parPas;
 
+
     return parPas;*/
-    parM.moveTo(parPas);
+    //long pos[2] = {parPas, -parPas};
+    //parM.move(pos);
+    //parM.runSpeedToPosition();
+    //parM1.setMaxSpeed(parVitesseMax);
+    //parM2.setMaxSpeed(parVitesseMax);
+
+    parM1.setCurrentPosition(0);
+    parM2.setCurrentPosition(0);
+    parM1.moveTo(parPas);
+    parM2.moveTo(parPas);
+    while (parM1.distanceToGo() > 0 || parM2.distanceToGo() > 0)
+    {
+        parM1.setSpeed(parVitesseMax);
+        parM2.setSpeed(parVitesseMax);
+        parM1.runSpeedToPosition();
+        parM2.runSpeedToPosition();
+    }
+
+    //delay(10000);
 }
 
 int avancerTemps(MultiStepper parM, unsigned long parTemps, int parVitesseMax)
@@ -40,17 +59,19 @@ int avancerTemps(MultiStepper parM, unsigned long parTemps, int parVitesseMax)
 
 
   unsigned long debut = millis();
-  //Serial.println(parTemps);
+  Serial.println(parTemps);
   //parM1.setSpeed(parVitesseMax);
   //parM2.setSpeed(parVitesseMax);
   //currentVitesse = parVitesseMax;
-
+  long pos[2] = {100, -100};
+  parM.moveTo(pos);
+  parM.run();
   while( debut + parTemps > millis() )
   {
     //Serial.print(millis());
     //Serial.print(" : ");
-    //Serial.println(parTemps+debut);
-    parM.moveTo(10);
+    Serial.println(millis());
+    parM.run();
   }
 
 }

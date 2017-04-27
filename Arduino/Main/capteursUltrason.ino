@@ -12,7 +12,7 @@
    Vous pouvez régler cette valeur en calculant le temps de propagation sur la distance parcourue
    Plus il est long, plus vous prendrez de temps a faire les mesures
 */
-const float delayMesureCapteur =  int(((2*MAX_DISTANCE)/(VITESSE_SON))*1000); 
+const float delayMesureCapteur =  int(((2*MAX_DISTANCE)/(VITESSE_SON))*1000);
 //const float delayMesureCapteur = 500.0;
 
 /*
@@ -25,12 +25,12 @@ const float delayMesureCapteur =  int(((2*MAX_DISTANCE)/(VITESSE_SON))*1000);
 */
 
 
-float takeValue(NewPing sonar) 
+float takeValue(NewPing sonar)
 {
   float sum = 0;
   float result;                               // Attention, si on ne fait pas la conversion directe, les valeurs sont tellement grandes qu'il faut utiliser un long
   int i = 0;
-  while (i < NB_MESURES) 
+  while (i < NB_MESURES)
   {             // Tant que l'on a pas le bon nombre de mesures valides
     result = sonar.ping();
     //Serial.println(delayMesureCapteur);
@@ -41,6 +41,11 @@ float takeValue(NewPing sonar)
     delay(delayMesureCapteur);          // Delai entre deux mesures pour éviter les interférences
   }
   return sum / NB_MESURES ;                 // On applique la moyenne
+}
+
+void detectObstacle()
+{ //return la valeur du premier capteur qui detecte l'obstacle
+    Serial.println("Tick");
 }
 
 void echoCheck(NewPing parlisteSonar[],unsigned int parDistance[], int numCapteur)
@@ -61,4 +66,3 @@ void unSeulCapteur(unsigned int parDistance[])
     //Serial.println("cm ");
   }
 }
-

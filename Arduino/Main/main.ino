@@ -9,6 +9,7 @@
 #include <Servo.h>
 #include "rgb_lcd.h"
 #include "Timer.h"
+#include <QueueArray.h>
 
 ///PORTS CONNECTES///
 //Ultrasons//
@@ -48,7 +49,7 @@
 //Moteurs pas à pas//
 const int nbPasMoteur = 400;
 const float taille_roue = 7.62;
-const int vitesse_max_ent = 30;
+const int vitesse_max_ent = 150;
 //Ecran LCD RGB//
 const int colorR = 0;
 const int colorG = 0;
@@ -57,7 +58,9 @@ const int colorB = 255;
 ///COMMANDES///
 
 ///VARIABLES GLOBALES///
-int queue[128] = {0}; //LA file d'instruction
+//int queue[128] = {0}; //LA file d'instruction
+//typedef int[2] commande;
+QueueArray <int> queue;
 
 unsigned long pingTimer[SONAR_NUM];
 unsigned int distance[SONAR_NUM];
@@ -97,7 +100,7 @@ void echoCheck(NewPing parlisteSonar[],unsigned int parDistance[], int numCapteu
 void unSeulCapteur(unsigned int parDistance[]);
 float takeValue(NewPing listeSonar);
 void detectObstacle();
-int avancerPas(MultiStepper parM, long parPas, int parVitesseMax);
+int avancerPas(AccelStepper parM1, AccelStepper parM2, long parPas, int parVitesseMax);
 int avancerTemps(MultiStepper parM, unsigned long parTemps, int parVitesseMax);
 void gauche(MultiStepper parM, int parAngle);
 void droite(MultiStepper parM, int parAngle);
@@ -123,8 +126,8 @@ void setup()
     servos[i].write(0);
   }
   Serial.println("Servo done");
-
-  /*pinMode(moteurGENA, OUTPUT);
+/*
+  pinMode(moteurGENA, OUTPUT);
   pinMode(moteurGENB, OUTPUT);
   pinMode(moteurDENA, OUTPUT);
   pinMode(moteurDENB, OUTPUT);
@@ -133,15 +136,20 @@ void setup()
   digitalWrite(moteurGENB, HIGH);
   digitalWrite(moteurDENA, HIGH);
   digitalWrite(moteurDENB, HIGH);
-  Serial.println("Stepper done");*/
+  */
 
-  moteurG.setMaxSpeed(vitesse_max_ent);
-  moteurD.setMaxSpeed(vitesse_max_ent);
+  moteurG.setMaxSpeed(400);
+  moteurD.setMaxSpeed(400);
+  moteurG.setSpeed(80);
+  moteurD.setSpeed(80);
+  /*
   moteurG.setCurrentPosition(0);
-  moteurD.setCurrentPosition(0);
+  moteurD.setCurrentPosition(0);*/
 
   moteurs.addStepper(moteurG);
   moteurs.addStepper(moteurD);
+
+
 
   Serial.println("Stepper done");
 
@@ -152,7 +160,7 @@ void setup()
   SPI.attachInterrupt();
   Serial.println("SPI done");
 
-  //int tickSonar = t.every(500, detectObstacle);
+  t.every(100, detectObstacle);
   Serial.println("Timer done");
 
   /*
@@ -161,13 +169,19 @@ void setup()
   Serial.println("LCD done");
 */
   //déterminer les codes d'instruction
-  queue[0] = 1;
+  /*queue[0] = 1;
   queue[1] = 2;
-  queue[2] = 0;
+  queue[2] = 500;
   queue[3] = 1;
   queue[4] = 3;
-  queue[5] = 5000;
-  queue[6] = 0;
+  queue[5] = 1000;
+  queue[]
+  queue[6] = 0;*/
+  queue.push(1);
+  queue.push(2);
+  queue.push(500);
+
+
 
   Serial.println("Fin d'initialisation");
 }
@@ -176,14 +190,21 @@ void setup()
 ///BOUCLE PRINCIPALE///
 void loop()
 {
-    t.update();
+  //moteurG.runSpeed();
+  t.update();
   //afficherLCD('Club Robot');
   //lcd.print("Club Robot");
   int i = 0;
-  while(queue[i] != 0)
+  int cmd = 0;
+  int l;
+  long position[2];
+
+  //while(queue[i] != 0)
+  while(!queue.isEmpty())
   {
     //Serial.println(queue[i]);
-    switch(queue[i])
+    cmd = queue.pop();
+    switch(cmd)
     {
       case 1: //On lit les capteurs
         /*for (int i = 0; i < SONAR_NUM; i++)
@@ -207,17 +228,25 @@ void loop()
         //Serial.print(delayMesureCapteur);
         break;
       case 2: //on avance d'un certain nombre de pas
-        i++;
+        //i++;
+        /*long positions[2];
+        positions[0] = 1000;
+        positions[1] = -1000;
+        moteurs.moveTo(positions);
+        moteurs.runSpeedToPosition();*/
         /*moteurG.setSpeed(vitesse_max_ent);
         moteurD.setSpeed(vitesse_max_ent);*/
-        avancerPas(moteurs, queue[i], vitesse_max_ent);
+        Serial.println("Case 2");
+        l = queue.pop();
+        Serial.println(l);
+        avancerPas(moteurG,moteurD, l, vitesse_max_ent);
         break;
       case 3:
-        i++; //on avance pendant un certain temps
-        avancerTemps(moteurs, (queue[i]), vitesse_max_ent);
+        //i++; //on avance pendant un certain temps
+        avancerTemps(moteurs, (queue.pop()), vitesse_max_ent);
         break;
       case 4:
-        i++;
+        //i++;
         if (process_it)
         {
           buf [pos] = 0;
@@ -248,7 +277,9 @@ void loop()
     Serial.print("instruction (");
     Serial.print(i);
     Serial.print(") : ");
-    Serial.println(queue[i]);
+    Serial.println(cmd);
+
+
   }
   endProg();
 }
@@ -258,6 +289,10 @@ void endProg()
 {
   Serial.println("Fin du programme");
   //funnyaction
-  arret(moteurG, moteurD);
+  //arret(moteurG, moteurD);
+  //moteurG.setSpeed(0);
+  //moteurD.setSpeed(0);
+  moteurG.disableOutputs();
+  moteurD.disableOutputs();
   while(1);
 }

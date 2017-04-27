@@ -64,10 +64,6 @@ float takeValue(NewPing sonar)
   return sum/NB_MESURES ;                   // On applique la moyenne
 }
 
-void detectObstacle()
-{ //return la valeur du premier capteur qui detecte l'obstacle
-}
-
 
 
 /*NewPing sonarGauche(trigPin, echoPin, MAX_DISTANCE);
