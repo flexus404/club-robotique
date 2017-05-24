@@ -95,7 +95,8 @@ Servo servos[NB_SERVO] =
 };
 
 ///PROTOTYPES///
-void endProg();
+void endProg(); //fonction executée à la fin du programme
+void funnyaction();
 void echoCheck(NewPing parlisteSonar[],unsigned int parDistance[], int numCapteur);
 void unSeulCapteur(unsigned int parDistance[]);
 float takeValue(NewPing listeSonar);
@@ -293,7 +294,14 @@ void endProg()
   //arret(moteurG, moteurD);
   //moteurG.setSpeed(0);
   //moteurD.setSpeed(0);
+  funnyaction();
   moteurG.disableOutputs();
   moteurD.disableOutputs();
   while(1);
+}
+
+void funnyaction()
+{
+
+    return;
 }
