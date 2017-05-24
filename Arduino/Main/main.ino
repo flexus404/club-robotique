@@ -160,7 +160,8 @@ void setup()
   SPI.attachInterrupt();
   Serial.println("SPI done");
 
-  t.every(100, detectObstacle);
+  /*t.every(100, detectObstacle);*/ //Timer.h
+  //https://brainy-bits.com/blogs/tutorials/speed-sensor-with-arduino
   Serial.println("Timer done");
 
   /*
