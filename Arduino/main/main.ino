@@ -94,7 +94,7 @@ static int currentDistanceG = 0;
 static int currentDistanceD = 0;
 
 //Servo
-#define NB_SERVO 2
+#define NB_SERVO 1
 
 ///COMMANDES///
 
@@ -135,7 +135,6 @@ MultiStepper moteurs;
 //Servomoteurs//
 Servo servos[NB_SERVO] =
 {
-  Servo (),
   Servo ()
 };
 
@@ -152,17 +151,6 @@ void droite(int parAngle);
 void arret();
 void afficherLCD(char msg[]);
 int envoyer(char cmd[]);
-/*
-float takeValue(NewPing sonar);
-void detectObstacle();
-void echoCheck(NewPing parlisteSonar[],unsigned int parDistance[], int numCapteur);
-void unSeulCapteur(unsigned int parDistance[]);
-
-int avancerPas(AccelStepper parM1, AccelStepper parM2, long parPas, int parVitesseMax);
-int avancerTemps(MultiStepper parM, unsigned long parTemps, int parVitesseMax);
-void gauche(MultiStepper parM, int parAngle);
-void droite(MultiStepper parM, int parAngle);
-void arret(AccelStepper parM1, AccelStepper parM2);*/
 
 ///INITIALISATION PROGRAMME///
 
@@ -178,25 +166,13 @@ void setup()
     servos[i].write(0);
   }
   Serial.println("Servo done");
-/*
-  pinMode(moteurGENA, OUTPUT);
-  pinMode(moteurGENB, OUTPUT);
-  pinMode(moteurDENA, OUTPUT);
-  pinMode(moteurDENB, OUTPUT);
 
-  digitalWrite(moteurGENA, HIGH);
-  digitalWrite(moteurGENB, HIGH);
-  digitalWrite(moteurDENA, HIGH);
-  digitalWrite(moteurDENB, HIGH);
-  */
-
-  moteurG.setMaxSpeed(400);
-  moteurD.setMaxSpeed(400);
-  moteurG.setSpeed(80);
-  moteurD.setSpeed(80);
-  /*
+  moteurG.setMaxSpeed(400);// setMaxSpeed 400
+  moteurD.setMaxSpeed(400);// setMaxSpeed 400
+  moteurG.setSpeed(80);// setSpeed 80
+  moteurD.setSpeed(80);//setSpeed 80
   moteurG.setCurrentPosition(0);
-  moteurD.setCurrentPosition(0);*/
+  moteurD.setCurrentPosition(0);
 
   moteurs.addStepper(moteurG);
   moteurs.addStepper(moteurD);
@@ -300,7 +276,7 @@ void loop()
         moteurs.runSpeedToPosition();*/
         /*moteurG.setSpeed(vitesse_max_ent);
         moteurD.setSpeed(vitesse_max_ent);*/
-        Serial.println("Case 2");
+        //Serial.println("Case 2");
         l = queue.pop();
         Serial.println(l);
         avancerPas(l, vitesse_max_ent);
@@ -413,18 +389,21 @@ boolean echoCheck(int numCapteur)
 int avancerPas(long parPas, int parVitesseMax)
 {
 
-    moteurG.setCurrentPosition(0);
-    moteurD.setCurrentPosition(0);
-    moteurG.moveTo(parPas);
-    moteurD.moveTo(parPas);
-    while (moteurG.distanceToGo() > 0 || moteurD.distanceToGo() > 0)
+    //moteurG.setCurrentPosition(0);
+    //moteurD.setCurrentPosition(0);
+    moteurG.moveTo(parPas+moteurG.currentPosition());
+    moteurD.moveTo(parPas+moteurD.currentPosition()));
+    /*while (moteurG.distanceToGo() > 0 || moteurD.distanceToGo() > 0)
     {
         moteurG.setSpeed(parVitesseMax);
         moteurD.setSpeed(parVitesseMax);
         moteurG.runSpeedToPosition();
         moteurD.runSpeedToPosition();
-    }
-
+    }*/
+    moteurG.setSpeed(parVitesseMax);
+    moteurD.setSpeed(parVitesseMax);
+    moteurG.runSpeedToPosition();
+    moteurD.runSpeedToPosition();
     //delay(10000);
 }
 
