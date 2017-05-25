@@ -9,12 +9,6 @@
 * rgb lcd
 */
 
-///TRUCS A GARDER
-/*
-* tout capteurUltrason
-* tout contrgit brancholeMoteur
-*/
-
 ///INCLUDES///
 #include <NewPing.h>
 //#include <digitalWriteFast.h>
@@ -271,6 +265,7 @@ void loop()
     //while(queue[i] != 0)
     while(!queue.isEmpty())
     {
+        switch(queue.pop())
     //On lit les capteurs
       case 1:
         /*for (int i = 0; i < NB_SONAR; i++)
@@ -343,7 +338,7 @@ void endProg()
 
 void funnyaction()
 {
-
+    //on active le servo necessaire pour déclenchement funnyaction
     return;
 }
 
