@@ -319,7 +319,7 @@ void funnyaction()
 {
 
       servos[0].write(90);
-  
+
     //on active le servo necessaire pour déclenchement funnyaction
     return;
 }
@@ -395,7 +395,7 @@ int avancerPas(long parPas, int parVitesseMax)
     //moteurG.setCurrentPosition(0);
     //moteurD.setCurrentPosition(0);
     moteurG.moveTo(parPas+moteurG.currentPosition());
-    moteurD.moveTo(parPas+moteurD.currentPosition()));
+    moteurD.moveTo(parPas+moteurD.currentPosition());
     /*while (moteurG.distanceToGo() > 0 || moteurD.distanceToGo() > 0)
     {
         moteurG.setSpeed(parVitesseMax);
@@ -466,7 +466,7 @@ void droite(int parAngle)
 {
   /*
   int j = 0;
-  
+
   int nbPas = (parAngle/360.0) * nb_pas_360;
   for(int i = 0; i < nbPas; i++)
   {
