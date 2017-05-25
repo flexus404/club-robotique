@@ -12,7 +12,7 @@
 ///TRUCS A GARDER
 /*
 * tout capteurUltrason
-* tout controleMoteur
+* tout contrgit brancholeMoteur
 */
 
 ///INCLUDES///
@@ -34,6 +34,8 @@
 #define echoPin1 16
 #define trigPin2 19
 #define echoPin2 18
+#define trigPin3 22
+#define echoPin3 23
 
 //Moteurs pas à pas//
 #define moteurGENA 37
@@ -62,6 +64,9 @@
 #define MOSI 50
 #define MISO 51
 
+//Attente tirette//
+#define tirette 24
+
 ///CONSTANTES///
 //Moteurs pas à pas//
 const int nbPasMoteur = 400;
@@ -78,7 +83,7 @@ const int colorB = 255;
    Ici on définit la distance max de détection voulue sur les capteurs, laissez par défault si vous ne savez pas.
 */
 #define NB_MESURES 2
-#define SONAR_NUM 2
+#define SONAR_NUM 3
 #define MAX_DISTANCE 0.50
 #define VITESSE_SON 340.0
 /*
@@ -138,14 +143,15 @@ ISR (SPI_STC_vect)
 
 ///INITIALISATION OBJETS
 //Le Timer principal
-//Timer t;
+Timer t;
 //Ecran LCD//
 rgb_lcd lcd;
 //Capteurs ultra-sons//
 NewPing listeSonar[SONAR_NUM] =
 {
   NewPing(trigPin1, echoPin1, MAX_DISTANCE),
-  NewPing(trigPin2, echoPin2, MAX_DISTANCE)
+  NewPing(trigPin2, echoPin2, MAX_DISTANCE),
+  NewPing(trigPin3, echoPin3, MAX_DISTANCE)
 };
 //Moteurs pas à pas//
 /*Stepper moteurG(nbPasMoteur, moteurGIN1, moteurGIN2, moteurGIN3, moteurGIN4);
@@ -264,7 +270,17 @@ void setup()
   queue.push(2);
   queue.push(500);
 
+  /*
+  Initialisation tirette
+   */
+   pinMode(tirette, INPUT);
 
+   while(digitalRead(tirette)==HIGH)
+   {
+   }
+   
+   t.after(90000, endProg);
+   Serial.println("Tirette done");
 
   Serial.println("Fin d'initialisation");
 }
@@ -274,96 +290,93 @@ void setup()
 void loop()
 {
   //moteurG.runSpeed();
-  //t.update();
-  //afficherLCD('Club Robot');
-  //lcd.print("Club Robot");
-  int i = 0;
-  int cmd = 0;
-  int l;
-  long position[2];
+    t.update();
+    //afficherLCD('Club Robot');
+    //lcd.print("Club Robot");
+    int i = 0;
+    int cmd = 0;
+    int l;
+    long position[2];
 
-  //while(queue[i] != 0)
-  while(!queue.isEmpty())
-  {
-    //Serial.println(queue[i]);
-    cmd = queue.pop();
-    switch(cmd)
+    //while(queue[i] != 0)
+    while(!queue.isEmpty())
     {
-      case 1: //On lit les capteurs
-        /*for (int i = 0; i < SONAR_NUM; i++)
-        {
-          if (millis() >= pingTimer[i])
+      //Serial.println(queue[i]);
+      cmd = queue.pop();
+      switch(cmd)
+      {
+        case 1: //On lit les capteurs
+          /*for (int i = 0; i < SONAR_NUM; i++)
           {
-            pingTimer[i] += delayMesureCapteur * SONAR_NUM;
-            listeSonar[CapteurActuel].timer_stop();
-            CapteurActuel = i;
-            distance[CapteurActuel] = 0;
-            listeSonar[CapteurActuel].ping_timer(echoCheck)
-            listeSonar.ping_median();
+            if (millis() >= pingTimer[i])
+            {
+              pingTimer[i] += delayMesureCapteur * SONAR_NUM;
+              listeSonar[CapteurActuel].timer_stop();
+              CapteurActuel = i;
+              distance[CapteurActuel] = 0;
+              listeSonar[CapteurActuel].ping_timer(echoCheck)
+              listeSonar.ping_median();
+            }
+          }*/
+
+          //uS = takeValue(listeSonarGauche); //On fait une mesure
+          //On affiche le résultat
+
+         //Serial.println(uS);
+         //Serial.println(" cm");
+         //Serial.print(delayMesureCapteur);
+          break;
+        case 2: //on avance d'un certain nombre de pas
+          //i++;
+          /*long positions[2];
+          positions[0] = 1000;
+          positions[1] = -1000;
+          moteurs.moveTo(positions);
+          moteurs.runSpeedToPosition();*/
+          /*moteurG.setSpeed(vitesse_max_ent);
+          moteurD.setSpeed(vitesse_max_ent);*/
+          Serial.println("Case 2");
+          l = queue.pop();
+          Serial.println(l);
+          avancerPas(moteurG,moteurD, l, vitesse_max_ent);
+          break;
+        case 3:
+          //i++; //on avance pendant un certain temps
+          avancerTemps(moteurs, (queue.pop()), vitesse_max_ent);
+          break;
+        case 4:
+          //i++;
+          if (process_it)
+          {
+            buf [pos] = 0;
+            //Serial.println (buf);
+            pos = 0;
+            process_it = false;
           }
-        }*/
-
-        //uS = takeValue(listeSonarGauche); //On fait une mesure
-        //On affiche le résultat
-
-        //Serial.println(uS);
-        //Serial.println(" cm");
-        //Serial.print(delayMesureCapteur);
-        break;
-      case 2: //on avance d'un certain nombre de pas
-        //i++;
-        /*long positions[2];
-        positions[0] = 1000;
-        positions[1] = -1000;
-        moteurs.moveTo(positions);
-        moteurs.runSpeedToPosition();*/
-        /*moteurG.setSpeed(vitesse_max_ent);
-        moteurD.setSpeed(vitesse_max_ent);*/
-        Serial.println("Case 2");
-        l = queue.pop();
-        Serial.println(l);
-        avancerPas(moteurG,moteurD, l, vitesse_max_ent);
-        break;
-      case 3:
-        //i++; //on avance pendant un certain temps
-        avancerTemps(moteurs, (queue.pop()), vitesse_max_ent);
-        break;
-      case 4:
-        //i++;
-        if (process_it)
-        {
-          buf [pos] = 0;
-          //Serial.println (buf);
-          pos = 0;
-          process_it = false;
-        }
-        break;
-      case 5:
-        break;
-      case 6:
-        break;
-      case 7:
-        break;
-      case 8:
-        break;
-      case 9:
-        break;
-      case 10:
-        break;
-      //default:
-      //break;
-
-
+          break;
+        case 5:
+          break;
+        case 6:
+          break;
+        case 7:
+          break;
+        case 8:
+          break;
+        case 9:
+          break;
+        case 10:
+          break;
+        //default:
+        //break;
+      }
+      i++;
+      Serial.println("");
+      Serial.print("instruction (");
+      Serial.print(i);
+      Serial.print(") : ");
+      Serial.println(cmd);
     }
-    i++;
-    Serial.println("");
-    Serial.print("instruction (");
-    Serial.print(i);
-    Serial.print(") : ");
-    Serial.println(cmd);
 
-
-  }
   endProg();
 }
 
