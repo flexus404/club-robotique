@@ -174,7 +174,7 @@ void setup()
 
   for (i = 0; i < NB_SERVO; i++)
   {
-    servos[i].attach(servo1 + i);
+    servos[i].attach(servoFunny + i);
     servos[i].write(0);
   }
   Serial.println("Servo done");
@@ -341,6 +341,9 @@ void endProg()
 
 void funnyaction()
 {
+
+      servos[0].write(90);
+  
     //on active le servo necessaire pour déclenchement funnyaction
     return;
 }
@@ -484,6 +487,7 @@ void droite(int parAngle)
 {
   /*
   int j = 0;
+  
   int nbPas = (parAngle/360.0) * nb_pas_360;
   for(int i = 0; i < nbPas; i++)
   {
