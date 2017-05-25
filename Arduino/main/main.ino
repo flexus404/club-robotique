@@ -79,6 +79,7 @@ const int colorB = 255;
 #define NB_SONAR 2
 #define MAX_DISTANCE 100
 #define VITESSE_SON 340.0
+#define DISTANCE_OB 20
 /*
    Nombre de milisecondes entre les captures successives, utilisées lors des perturbations dues à des pans inclinés,
    Vous pouvez régler cette valeur en calculant le temps de propagation sur la distance parcourue
@@ -400,8 +401,9 @@ void detectObstacle()
     //t.update();
     Serial.println("J'entre");
     int i;
-    bool hasObstacle = false;
-    for(i = 0; i < NB_SONAR; i++) //on test tout les capteurs
+    //bool hasObstacle = false;
+    float distObstacle = 0.0;
+    for(i = 0; i < NB_SONAR; i++) //on test tout les capteurs, on peut décider d'esquiver l'obstacle
     {
         /*
         Serial.print("Capteur numero ");
@@ -414,13 +416,13 @@ void detectObstacle()
             endProg();
         }
         */
-        hasObstacle = takeValue(i);
+        distObstacle = takeValue(i);
         Serial.print(" 1. hasobstacle");
-        Serial.println(hasObstacle);
-        if(hasObstacle) //si l'on est face a un obstacle
+        Serial.println(distObstacle);
+        if(distObstacle < DISTANCE_OB) //si l'on est face a un obstacle
         {
             arret(moteurG,moteurD); //on arrete les moteurs
-            while(takeValue(i)) //on attend qu'il n'y est plus d'obstacle
+            while(takeValue(i) < DISTANCE_OB) //on attend qu'il n'y est plus d'obstacle
             {
                 t.update();
                 delay(100);
@@ -430,9 +432,7 @@ void detectObstacle()
         else
         {
             Serial.print("distance : ");
-            Serial.println(distance[i]);
-            Serial.print("hasObstacle : ");
-            Serial.println(hasObstacle);
+            Serial.println(distObstacle);
             moteurG.run(); //on redemarre les moteurs
             moteurD.run();
         }
