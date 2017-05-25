@@ -47,8 +47,7 @@
 #define moteurDIN4 9
 
 //Servomoteurs//
-#define servo1 30
-#define servo2 31
+#define servoFunny 30
 
 //Ecran LCD RGB//
 #define SDALCD 20
@@ -245,7 +244,7 @@ void setup()
    }
 
    t.after(90000, endProg);
-   t.every(1000, detectObstacle);   
+   t.every(1000, detectObstacle);
    Serial.println("Tirette et timer done");
 
   Serial.println("Fin d'initialisation");
