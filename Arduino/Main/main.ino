@@ -9,6 +9,12 @@
 * rgb lcd
 */
 
+///TRUCS A GARDER
+/*
+* tout capteurUltrason
+* tout controleMoteur
+*/
+
 ///INCLUDES///
 #include <NewPing.h>
 //#include <digitalWriteFast.h>
