@@ -12,7 +12,7 @@
 ///TRUCS A GARDER
 /*
 * tout capteurUltrason
-* tout controleMoteur
+* tout contrgit brancholeMoteur
 */
 
 ///INCLUDES///
@@ -34,6 +34,8 @@
 #define echoPin1 16
 #define trigPin2 19
 #define echoPin2 18
+#define trigPin3 22
+#define echoPin3 23
 
 //Moteurs pas à pas//
 #define moteurGENA 37
@@ -62,6 +64,9 @@
 #define MOSI 50
 #define MISO 51
 
+//Attente tirette//
+#define tirette 24
+
 ///CONSTANTES///
 //Moteurs pas à pas//
 const int nbPasMoteur = 400;
@@ -78,7 +83,7 @@ const int colorB = 255;
    Ici on définit la distance max de détection voulue sur les capteurs, laissez par défault si vous ne savez pas.
 */
 #define NB_MESURES 2
-#define NB_SONAR 2
+#define NB_SONAR 3
 #define MAX_DISTANCE 0.50
 #define VITESSE_SON 340.0
 /*
@@ -116,14 +121,15 @@ int buf[64] = {0};
 
 ///INITIALISATION OBJETS
 //Le Timer principal
-//Timer t;
+Timer t;
 //Ecran LCD//
 rgb_lcd lcd;
 //Capteurs ultra-sons//
 NewPing listeSonar[NB_SONAR] =
 {
   NewPing(trigPin1, echoPin1, MAX_DISTANCE),
-  NewPing(trigPin2, echoPin2, MAX_DISTANCE)
+  NewPing(trigPin2, echoPin2, MAX_DISTANCE),
+  NewPing(trigPin3, echoPin3, MAX_DISTANCE)
 };
 //Moteurs pas à pas//
 /*Stepper moteurG(nbPasMoteur, moteurGIN1, moteurGIN2, moteurGIN3, moteurGIN4);
@@ -234,7 +240,17 @@ void setup()
   queue.push(2);
   queue.push(500);
 
+  /*
+  Initialisation tirette
+   */
+   pinMode(tirette, INPUT);
 
+   while(digitalRead(tirette)==HIGH)
+   {
+   }
+
+   t.after(90000, endProg);
+   Serial.println("Tirette done");
 
   Serial.println("Fin d'initialisation");
 }
@@ -244,20 +260,16 @@ void setup()
 void loop()
 {
   //moteurG.runSpeed();
-  //t.update();
-  //afficherLCD('Club Robot');
-  //lcd.print("Club Robot");
-  int i = 0;
-  int cmd = 0;
-  int l;
-  long position[2];
+    t.update();
+    //afficherLCD('Club Robot');
+    //lcd.print("Club Robot");
+    int i = 0;
+    int cmd = 0;
+    int l;
+    long position[2];
 
-  //while(queue[i] != 0)
-  while(!queue.isEmpty())
-  {
-    //Serial.println(queue[i]);
-    cmd = queue.pop();
-    switch(cmd)
+    //while(queue[i] != 0)
+    while(!queue.isEmpty())
     {
     //On lit les capteurs
       case 1:
@@ -309,20 +321,9 @@ void loop()
           pos = 0;
           process_it = false;
         }
-      //default:
-      //break;
-
-
+      default:
+        break;
     }
-    i++;
-    Serial.println("");
-    Serial.print("instruction (");
-    Serial.print(i);
-    Serial.print(") : ");
-    Serial.println(cmd);
-
-
-  }
   endProg();
 }
 
