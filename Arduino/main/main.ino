@@ -78,7 +78,7 @@ const int colorB = 255;
    Ici on définit la distance max de détection voulue sur les capteurs, laissez par défault si vous ne savez pas.
 */
 #define NB_MESURES 2
-#define SONAR_NUM 2
+#define NB_SONAR 2
 #define MAX_DISTANCE 0.50
 #define VITESSE_SON 340.0
 /*
@@ -105,35 +105,11 @@ static int currentDistanceD = 0;
 //typedef int[2] commande;
 QueueArray <int> queue;
 
-unsigned long pingTimer[SONAR_NUM];
-unsigned int distance[SONAR_NUM];
+unsigned int distance[NB_SONAR];
 int CapteurActuel = 0;
 float uS;
 int i = 0;
 
-/* SPI */
-volatile byte pos;
-char buf[64];
-volatile boolean process_it;
-int envoyer(char cmd[])
-{
-  
-}
-
-ISR (SPI_STC_vect)
-{
-  //On recupere le bit dans le registre de sonnée SPI
-  byte c = SPDR; 
-  
-  if (pos < sizeof(buf))
-    {
-    buf [pos++] = c;
-    
-    if (c == '\n')
-      process_it = true;
-      
-    }  
-} 
 
 
 ///INITIALISATION OBJETS
@@ -142,7 +118,7 @@ ISR (SPI_STC_vect)
 //Ecran LCD//
 rgb_lcd lcd;
 //Capteurs ultra-sons//
-NewPing listeSonar[SONAR_NUM] =
+NewPing listeSonar[NB_SONAR] =
 {
   NewPing(trigPin1, echoPin1, MAX_DISTANCE),
   NewPing(trigPin2, echoPin2, MAX_DISTANCE)
@@ -165,9 +141,8 @@ Servo servos[NB_SERVO] =
 ///PROTOTYPES///
 void endProg(); //fonction executée à la fin du programme
 void funnyaction();
-void echoCheck(NewPing parlisteSonar[],unsigned int parDistance[], int numCapteur);
-void unSeulCapteur(unsigned int parDistance[]);
-float takeValue(NewPing listeSonar);
+boolean echoCheck(int numCapteur);
+float takeValue(int numCapteur);
 void detectObstacle();
 int avancerPas(AccelStepper parM1, AccelStepper parM2, long parPas, int parVitesseMax);
 int avancerTemps(MultiStepper parM, unsigned long parTemps, int parVitesseMax);
@@ -195,11 +170,6 @@ void setup()
 {
   Serial.begin (19200); //Pour pouvoir écrire sur le moniteur
 
-  pingTimer[0] = millis() + 100;
-  for (int i = 0; i < SONAR_NUM ; i++)
-  {
-    pingTimer[i] = pingTimer[i - 1] + delayMesureCapteur;
-  }
   Serial.println("Ping done");
 
   for (i = 0; i < NB_SERVO; i++)
@@ -290,11 +260,11 @@ void loop()
     switch(cmd)
     {
       case 1: //On lit les capteurs
-        /*for (int i = 0; i < SONAR_NUM; i++)
+        /*for (int i = 0; i < NB_SONAR; i++)
         {
           if (millis() >= pingTimer[i])
           {
-            pingTimer[i] += delayMesureCapteur * SONAR_NUM;
+            pingTimer[i] += delayMesureCapteur * NB_SONAR;
             listeSonar[CapteurActuel].timer_stop();
             CapteurActuel = i;
             distance[CapteurActuel] = 0;
@@ -396,14 +366,14 @@ void funnyaction()
    Fonction à utiliser pour faire des mesures
    Modifiez a vos risques et périls
 */
-float takeValue(NewPing sonar)
+float takeValue(int numCapteur)
 {
   float sum = 0;
   float result;                               // Attention, si on ne fait pas la conversion directe, les valeurs sont tellement grandes qu'il faut utiliser un long
   int i = 0;
   while (i < NB_MESURES)
   {             // Tant que l'on a pas le bon nombre de mesures valides
-    result = sonar.ping();
+    result = listeSonar[numCapteur].ping();
     //Serial.println(delayMesureCapteur);
     if (result != 0) {                      // Si la valeur est 0, elle n'est pas valide
       sum += result / US_ROUNDTRIP_CM;          // On convertis en distance avec la valeur donnée dans la librairie                              // On compte une mesure valide de plus
@@ -414,31 +384,33 @@ float takeValue(NewPing sonar)
   return sum / NB_MESURES ;                 // On applique la moyenne
 }
 
+//Fonction de callback
 void detectObstacle()
 { //return la valeur du premier capteur qui detecte l'obstacle
+    int i;
+    for(i = 0; i < NB_SONAR; i++)
+    {
+        echoCheck(i);
+        Serial.println(distance[i]);
+    }
     Serial.println("Tick");
 }
 
-void echoCheck(NewPing parlisteSonar[],unsigned int parDistance[], int numCapteur)
+boolean echoCheck(int numCapteur)
 {
-  if (parlisteSonar[numCapteur].check_timer())
+  if (listeSonar[numCapteur].check_timer())
   {
-    parDistance[numCapteur] = parlisteSonar[numCapteur].ping_result / US_ROUNDTRIP_CM;
+    distance[numCapteur] = listeSonar[numCapteur].ping_median(NB_MESURES) / US_ROUNDTRIP_CM;
+    return true;
+  }
+  else
+  {
+      return false;
   }
 }
 
-void unSeulCapteur(unsigned int parDistance[])
-{
-  for (int i = 0; i < SONAR_NUM; i++)
-  {
-    //Serial.print(i);
-    //Serial.print("=");
-    //Serial.print(distance[i]);
-    //Serial.println("cm ");
-  }
-}
 
-///Fonctions controle moteur 
+///Fonctions controle moteur
 int avancerPas(AccelStepper parM1, AccelStepper parM2, long parPas, int parVitesseMax)
 {
   /*
