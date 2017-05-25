@@ -153,7 +153,6 @@ void droite(int parAngle);
 void arret();
 void afficherLCD(char msg[]);
 int envoyer(char cmd[]);
-void detectObstacle();
 /*
 float takeValue(NewPing sonar);
 void detectObstacle();
@@ -246,7 +245,7 @@ void setup()
    }
 
    t.after(90000, endProg);
-   t.every(30000, detectObstacle);   
+   t.every(1000, detectObstacle);   
    Serial.println("Tirette et timer done");
 
   Serial.println("Fin d'initialisation");
