@@ -109,7 +109,9 @@ unsigned int distance[NB_SONAR];
 int CapteurActuel = 0;
 float uS;
 int i = 0;
-
+bool process_it;
+int pos = 0;
+int buf[64] = {0};
 
 
 ///INITIALISATION OBJETS
@@ -151,19 +153,17 @@ void droite(MultiStepper parM, int parAngle);
 void arret(AccelStepper parM1, AccelStepper parM2);
 void afficherLCD(char msg[]);
 int envoyer(char cmd[]);
-
-/* Prototypes capteurs ultrasons */
+/*
 float takeValue(NewPing sonar);
 void detectObstacle();
 void echoCheck(NewPing parlisteSonar[],unsigned int parDistance[], int numCapteur);
 void unSeulCapteur(unsigned int parDistance[]);
 
-/* Prototypes controle moteur */
 int avancerPas(AccelStepper parM1, AccelStepper parM2, long parPas, int parVitesseMax);
 int avancerTemps(MultiStepper parM, unsigned long parTemps, int parVitesseMax);
 void gauche(MultiStepper parM, int parAngle);
 void droite(MultiStepper parM, int parAngle);
-void arret(AccelStepper parM1, AccelStepper parM2);
+void arret(AccelStepper parM1, AccelStepper parM2);*/
 
 ///INITIALISATION PROGRAMME///
 void setup()
