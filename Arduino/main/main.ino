@@ -146,11 +146,11 @@ void funnyaction();
 boolean echoCheck(int numCapteur);
 float takeValue(int numCapteur);
 void detectObstacle();
-int avancerPas(AccelStepper parM1, AccelStepper parM2, long parPas, int parVitesseMax);
-int avancerTemps(MultiStepper parM, unsigned long parTemps, int parVitesseMax);
-void gauche(MultiStepper parM, int parAngle);
-void droite(MultiStepper parM, int parAngle);
-void arret(AccelStepper parM1, AccelStepper parM2);
+int avancerPas(long parPas, int parVitesseMax);
+int avancerTemps(unsigned long parTemps, int parVitesseMax);
+void gauche(int parAngle);
+void droite(int parAngle);
+void arret();
 void afficherLCD(char msg[]);
 int envoyer(char cmd[]);
 /*
@@ -259,7 +259,8 @@ void loop()
     cmd = queue.pop();
     switch(cmd)
     {
-      case 1: //On lit les capteurs
+    //On lit les capteurs
+      case 1:
         /*for (int i = 0; i < NB_SONAR; i++)
         {
           if (millis() >= pingTimer[i])
@@ -280,7 +281,8 @@ void loop()
         //Serial.println(" cm");
         //Serial.print(delayMesureCapteur);
         break;
-      case 2: //on avance d'un certain nombre de pas
+        //on avance d'un certain nombre de pas
+      case 2:
         //i++;
         /*long positions[2];
         positions[0] = 1000;
@@ -292,11 +294,11 @@ void loop()
         Serial.println("Case 2");
         l = queue.pop();
         Serial.println(l);
-        avancerPas(moteurG,moteurD, l, vitesse_max_ent);
+        avancerPas(l, vitesse_max_ent);
         break;
       case 3:
         //i++; //on avance pendant un certain temps
-        avancerTemps(moteurs, (queue.pop()), vitesse_max_ent);
+        avancerTemps((queue.pop()), vitesse_max_ent);
         break;
       case 4:
         //i++;
@@ -307,19 +309,6 @@ void loop()
           pos = 0;
           process_it = false;
         }
-        break;
-      case 5:
-        break;
-      case 6:
-        break;
-      case 7:
-        break;
-      case 8:
-        break;
-      case 9:
-        break;
-      case 10:
-        break;
       //default:
       //break;
 
@@ -345,9 +334,9 @@ void endProg()
   //arret(moteurG, moteurD);
   //moteurG.setSpeed(0);
   //moteurD.setSpeed(0);
-  funnyaction();
   moteurG.disableOutputs();
   moteurD.disableOutputs();
+  funnyaction();
   while(1);
 }
 
@@ -388,10 +377,21 @@ float takeValue(int numCapteur)
 void detectObstacle()
 { //return la valeur du premier capteur qui detecte l'obstacle
     int i;
-    for(i = 0; i < NB_SONAR; i++)
+    bool hasObstacle = false;
+    for(i = 0; i < NB_SONAR; i++) //on test tout les capteurs
     {
-        echoCheck(i);
+        if(hasObstacle = echoCheck(i)) //si l'on est face a un obstacle
+        {
+            arret(); //on arrete les moteurs
+            while(echoCheck(i)) //on attend qu'il n'y est plus d'obstacle
+            {
+                delay(100);
+            }
+        }
         Serial.println(distance[i]);
+        Serial.println(hasObstacle);
+        moteurG.run(); //on redemarre les moteurs
+        moteurD.run();
     }
     Serial.println("Tick");
 }
@@ -411,45 +411,25 @@ boolean echoCheck(int numCapteur)
 
 
 ///Fonctions controle moteur
-int avancerPas(AccelStepper parM1, AccelStepper parM2, long parPas, int parVitesseMax)
+int avancerPas(long parPas, int parVitesseMax)
 {
-  /*
-    parM1.setSpeed(parVitesseMax);
-    parM2.setSpeed(parVitesseMax);
 
-    for (int i = 0; i < parPas; i++)
+    moteurG.setCurrentPosition(0);
+    moteurD.setCurrentPosition(0);
+    moteurG.moveTo(parPas);
+    moteurD.moveTo(parPas);
+    while (moteurG.distanceToGo() > 0 || moteurD.distanceToGo() > 0)
     {
-      parM1.step(1);
-      parM2.step(-1);
-    }
-
-    currentDistanceG += parPas;
-    currentDistanceD += parPas;
-
-
-    return parPas;*/
-    //long pos[2] = {parPas, -parPas};
-    //parM.move(pos);
-    //parM.runSpeedToPosition();
-    //parM1.setMaxSpeed(parVitesseMax);
-    //parM2.setMaxSpeed(parVitesseMax);
-
-    parM1.setCurrentPosition(0);
-    parM2.setCurrentPosition(0);
-    parM1.moveTo(parPas);
-    parM2.moveTo(parPas);
-    while (parM1.distanceToGo() > 0 || parM2.distanceToGo() > 0)
-    {
-        parM1.setSpeed(parVitesseMax);
-        parM2.setSpeed(parVitesseMax);
-        parM1.runSpeedToPosition();
-        parM2.runSpeedToPosition();
+        moteurG.setSpeed(parVitesseMax);
+        moteurD.setSpeed(parVitesseMax);
+        moteurG.runSpeedToPosition();
+        moteurD.runSpeedToPosition();
     }
 
     //delay(10000);
 }
 
-int avancerTemps(MultiStepper parM, unsigned long parTemps, int parVitesseMax)
+int avancerTemps(unsigned long parTemps, int parVitesseMax)
 {
     /*
     parM1.setSpeed(parVitesseMax);
@@ -467,19 +447,19 @@ int avancerTemps(MultiStepper parM, unsigned long parTemps, int parVitesseMax)
   //parM2.setSpeed(parVitesseMax);
   //currentVitesse = parVitesseMax;
   long pos[2] = {100, -100};
-  parM.moveTo(pos);
-  parM.run();
+  moteurs.moveTo(pos);
+  moteurs.run();
   while( debut + parTemps > millis() )
   {
     //Serial.print(millis());
     //Serial.print(" : ");
     Serial.println(millis());
-    parM.run();
+    moteurs.run();
   }
 
 }
 
-void gauche(MultiStepper parM, int parAngle)
+void gauche(int parAngle)
 {
   /*
   int j = 0;
@@ -498,10 +478,10 @@ void gauche(MultiStepper parM, int parAngle)
   long var = (360.0/(long)nb_pas_360)*(long)parAngle;
   pos[0] = var;
   pos[1] = -var;
-  parM.moveTo(pos);
+  moteurs.moveTo(pos);
 }
 
-void droite(MultiStepper parM, int parAngle)
+void droite(int parAngle)
 {
   /*
   int j = 0;
@@ -516,16 +496,16 @@ void droite(MultiStepper parM, int parAngle)
   currentDistanceD += j;
   //return 0;
   */
-  gauche(parM, -parAngle);
+  gauche(-parAngle);
 }
 
-void arret(AccelStepper parM1, AccelStepper parM2)
+void arret()
 {
   /*
   parM1.setSpeed(0);
   parM2.setSpeed(0);
   currentVitesse = 0;
   */
-  parM1.stop();
-  parM2.stop();
+  moteurG.stop();
+  moteurD.stop();
 }
