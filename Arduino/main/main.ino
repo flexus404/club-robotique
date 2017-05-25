@@ -153,6 +153,7 @@ void droite(int parAngle);
 void arret();
 void afficherLCD(char msg[]);
 int envoyer(char cmd[]);
+void detectObstacle();
 /*
 float takeValue(NewPing sonar);
 void detectObstacle();
@@ -166,6 +167,7 @@ void droite(MultiStepper parM, int parAngle);
 void arret(AccelStepper parM1, AccelStepper parM2);*/
 
 ///INITIALISATION PROGRAMME///
+
 void setup()
 {
   Serial.begin (19200); //Pour pouvoir écrire sur le moniteur
@@ -244,7 +246,8 @@ void setup()
    }
 
    t.after(90000, endProg);
-   Serial.println("Tirette done");
+   t.every(30000, detectObstacle);   
+   Serial.println("Tirette et timer done");
 
   Serial.println("Fin d'initialisation");
 }
@@ -265,7 +268,8 @@ void loop()
     //while(queue[i] != 0)
     while(!queue.isEmpty())
     {
-        switch(queue.pop())
+      switch(queue.pop())
+      {
     //On lit les capteurs
       case 1:
         /*for (int i = 0; i < NB_SONAR; i++)
@@ -318,6 +322,7 @@ void loop()
         }
       default:
         break;
+      }
     }
   endProg();
 }
