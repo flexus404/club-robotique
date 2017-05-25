@@ -1,3 +1,15 @@
+///SYSTEME  A REALISER
+/*
+* module attente tirette
+* module de fin de match
+* test de la distance capteur (danger, true/false)
+* calcul distance capteur de façon plus précise
+* controle nouveau moteur pas à pas
+* funnyaction
+* rgb lcd
+
+*/
+
 ///INCLUDES///
 #include <NewPing.h>
 //#include <digitalWriteFast.h>
@@ -70,7 +82,7 @@ int i = 0;
 
 ///INITIALISATION OBJETS
 //Le Timer principal
-Timer t;
+//Timer t;
 //Ecran LCD//
 rgb_lcd lcd;
 //Capteurs ultra-sons//
@@ -193,7 +205,7 @@ void setup()
 void loop()
 {
   //moteurG.runSpeed();
-  t.update();
+  //t.update();
   //afficherLCD('Club Robot');
   //lcd.print("Club Robot");
   int i = 0;
