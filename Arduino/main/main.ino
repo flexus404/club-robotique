@@ -28,23 +28,23 @@
 #define echoPin1 16
 #define trigPin2 19
 #define echoPin2 18
-#define trigPin3 22
-#define echoPin3 23
+#define trigPin3 22//
+#define echoPin3 23//
 
 //Moteurs pas à pas//
-#define moteurGENA 37
-#define moteurGENB 36
-#define moteurGIN1 10
-#define moteurGIN2 11
-#define moteurGIN3 12
-#define moteurGIN4 13
+#define moteurDENA 37
+#define moteurDENB 36
+#define moteurDIN1 10
+#define moteurDIN2 11
+#define moteurDIN3 12
+#define moteurDIN4 13
 
-#define moteurDENA 34
-#define moteurDENB 35
-#define moteurDIN1 6
-#define moteurDIN2 7
-#define moteurDIN3 8
-#define moteurDIN4 9
+#define moteurGENA 34
+#define moteurGENB 35
+#define moteurGIN1 6
+#define moteurGIN2 7
+#define moteurGIN3 8
+#define moteurGIN4 9
 
 //Servomoteurs//
 #define servoFunny 30
@@ -64,7 +64,7 @@
 //Moteurs pas à pas//
 const int nbPasMoteur = 400;
 const float taille_roue = 7.62;
-const int vitesse_max_ent = 150;
+const int vitesse_max_ent = 100;
 
 //Ecran LCD RGB//
 const int colorR = 0;
@@ -75,17 +75,18 @@ const int colorB = 255;
 /*
    Ici on définit la distance max de détection voulue sur les capteurs, laissez par défault si vous ne savez pas.
 */
-#define NB_MESURES 2
-#define NB_SONAR 3
-#define MAX_DISTANCE 0.50
+#define NB_MESURES 3
+#define NB_SONAR 2
+#define MAX_DISTANCE 100
 #define VITESSE_SON 340.0
 /*
    Nombre de milisecondes entre les captures successives, utilisées lors des perturbations dues à des pans inclinés,
    Vous pouvez régler cette valeur en calculant le temps de propagation sur la distance parcourue
    Plus il est long, plus vous prendrez de temps a faire les mesures
 */
-const float delayMesureCapteur =  int(((2*MAX_DISTANCE)/(VITESSE_SON))*1000);
-//const float delayMesureCapteur = 500.0;
+//const float delayMesureCapteur =  int(((2*MAX_DISTANCE)/(VITESSE_SON))*1000);
+//const float delayMesureCapteur = 100.0;
+#define DELAI_MESURES_CAPTEURS 1
 
 //Controle moteur
 const int nb_pas_360 = 500; //Valeur à trouver de facon empirique
@@ -121,14 +122,13 @@ rgb_lcd lcd;
 NewPing listeSonar[NB_SONAR] =
 {
   NewPing(trigPin1, echoPin1, MAX_DISTANCE),
-  NewPing(trigPin2, echoPin2, MAX_DISTANCE),
-  NewPing(trigPin3, echoPin3, MAX_DISTANCE)
+  NewPing(trigPin2, echoPin2, MAX_DISTANCE)
 };
 //Moteurs pas à pas//
 /*Stepper moteurG(nbPasMoteur, moteurGIN1, moteurGIN2, moteurGIN3, moteurGIN4);
 Stepper moteurD(nbPasMoteur, moteurDIN1, moteurDIN2, moteurDIN3, moteurDIN4);*/
-AccelStepper moteurG(AccelStepper::FULL4WIRE, moteurGIN1, moteurGIN2, moteurGIN3, moteurGIN4);
-AccelStepper moteurD(AccelStepper::FULL4WIRE, moteurDIN1, moteurDIN2, moteurDIN3, moteurDIN4);
+AccelStepper moteurG(AccelStepper::FULL4WIRE, moteurGIN1, moteurGIN2, moteurGIN3, moteurGIN4, true);
+AccelStepper moteurD(AccelStepper::FULL4WIRE, moteurDIN1, moteurDIN2, moteurDIN3, moteurDIN4, true);
 
 MultiStepper moteurs;
 
@@ -144,11 +144,11 @@ void funnyaction();
 boolean echoCheck(int numCapteur);
 float takeValue(int numCapteur);
 void detectObstacle();
-int avancerPas(long parPas, int parVitesseMax);
+int avancerPas(AccelStepper parM1, AccelStepper parM2, long parPas, int parVitesseMax);
 int avancerTemps(unsigned long parTemps, int parVitesseMax);
 void gauche(int parAngle);
 void droite(int parAngle);
-void arret();
+void arret(AccelStepper parM1, AccelStepper parM2);
 void afficherLCD(char msg[]);
 int envoyer(char cmd[]);
 
@@ -163,16 +163,26 @@ void setup()
   for (i = 0; i < NB_SERVO; i++)
   {
     servos[i].attach(servoFunny + i);
-    servos[i].write(0);
+    //servos[i].write(0);
   }
   Serial.println("Servo done");
+
+/*
+  pinMode(moteurGENA, OUTPUT);
+  pinMode(moteurGENB, OUTPUT);
+  pinMode(moteurDENA, OUTPUT);
+  pinMode(moteurDENB, OUTPUT);
+  digitalWrite(moteurGENA, HIGH);
+  digitalWrite(moteurGENB, HIGH);
+  digitalWrite(moteurDENA, HIGH);
+  digitalWrite(moteurDENB, HIGH);*/
 
   moteurG.setMaxSpeed(400);// setMaxSpeed 400
   moteurD.setMaxSpeed(400);// setMaxSpeed 400
   moteurG.setSpeed(80);// setSpeed 80
   moteurD.setSpeed(80);//setSpeed 80
-  moteurG.setCurrentPosition(0);
-  moteurD.setCurrentPosition(0);
+  //moteurG.setCurrentPosition(0);
+  //moteurD.setCurrentPosition(0);
 
   moteurs.addStepper(moteurG);
   moteurs.addStepper(moteurD);
@@ -180,17 +190,17 @@ void setup()
 
 
   Serial.println("Stepper done");
-
+/*
   pinMode(MISO, OUTPUT);
   SPCR |= _BV(SPE);
   pos = 0;
   process_it = false;
-  SPI.attachInterrupt();
+  SPI.attachInterrupt();*/
   Serial.println("SPI done");
 
   /*t.every(100, detectObstacle);*/ //Timer.h
   //https://brainy-bits.com/blogs/tutorials/speed-sensor-with-arduino
-  Serial.println("Timer done");
+
 
   /*
   lcd.begin(16, 2);
@@ -208,30 +218,63 @@ void setup()
   queue[6] = 0;*/
   queue.push(1);
   queue.push(2);
-  queue.push(500);
+  queue.push(150);
+  queue.push(2);
+  queue.push(150);
+  queue.push(2);
+  queue.push(150);
+  queue.push(2);
+  queue.push(150);
+  queue.push(2);
+  queue.push(150);
+  Serial.println("Liste de tache done");
 
   /*
   Initialisation tirette
    */
    pinMode(tirette, INPUT);
 
-   while(digitalRead(tirette)==HIGH)
+  while(digitalRead(tirette)==HIGH)
    {
    }
 
+   //t.every(500, detectObstacle);
    t.after(90000, endProg);
-   t.every(1000, detectObstacle);
    Serial.println("Tirette et timer done");
 
   Serial.println("Fin d'initialisation");
+
+  /* Benchmarking des moteurs
+  avancerPas(moteurG, moteurD, 1, 150);
+  delay(2000);
+  avancerPas(moteurG, moteurD, 2, 150);
+  delay(2000);
+  avancerPas(moteurG, moteurD, 3, 150);
+  delay(2000);
+  avancerPas(moteurG, moteurD, 4, 150);
+  delay(2000);
+
+
+  avancerPas(moteurG, moteurD, 2, 50);
+  delay(2000);
+  avancerPas(moteurG, moteurD, 2, 100);
+  delay(2000);
+  avancerPas(moteurG, moteurD, 2, 150);
+  delay(2000);
+  avancerPas(moteurG, moteurD, 2, 200);
+  delay(2000);
+  */
 }
 
 
 ///BOUCLE PRINCIPALE///
 void loop()
 {
+    t.update();
+    /*
   //moteurG.runSpeed();
     t.update();
+    Serial.println("UPDATE");
     //afficherLCD('Club Robot');
     //lcd.print("Club Robot");
     int i = 0;
@@ -242,6 +285,8 @@ void loop()
     //while(queue[i] != 0)
     while(!queue.isEmpty())
     {
+        t.update();
+        Serial.println(takeValue(1));
       switch(queue.pop())
       {
     //On lit les capteurs
@@ -265,21 +310,22 @@ void loop()
         //Serial.println(uS);
         //Serial.println(" cm");
         //Serial.print(delayMesureCapteur);
-        break;
+        //break;
         //on avance d'un certain nombre de pas
-      case 2:
+      //case 2:
         //i++;
         /*long positions[2];
         positions[0] = 1000;
         positions[1] = -1000;
         moteurs.moveTo(positions);
-        moteurs.runSpeedToPosition();*/
+        moteurs.runSpeedToPosition();
         /*moteurG.setSpeed(vitesse_max_ent);
-        moteurD.setSpeed(vitesse_max_ent);*/
+        moteurD.setSpeed(vitesse_max_ent);
         //Serial.println("Case 2");
         l = queue.pop();
+        Serial.print("l : ");
         Serial.println(l);
-        avancerPas(l, vitesse_max_ent);
+        avancerPas(moteurG,moteurD,l, vitesse_max_ent);
         break;
       case 3:
         //i++; //on avance pendant un certain temps
@@ -298,27 +344,25 @@ void loop()
         break;
       }
     }
-  endProg();
+  //endProg();
+  */
 }
 
 ///FONCTION DE FIN DE PROGRAMME
 void endProg()
 {
   Serial.println("Fin du programme");
-  //funnyaction
-  //arret(moteurG, moteurD);
-  //moteurG.setSpeed(0);
-  //moteurD.setSpeed(0);
   moteurG.disableOutputs();
   moteurD.disableOutputs();
   funnyaction();
+  Serial.println("CATAPUUUULTE");
   while(1);
 }
 
 void funnyaction()
 {
+    servos[0].write(0);
 
-      servos[0].write(90);
 
     //on active le servo necessaire pour déclenchement funnyaction
     return;
@@ -345,8 +389,7 @@ float takeValue(int numCapteur)
     if (result != 0) {                      // Si la valeur est 0, elle n'est pas valide
       sum += result / US_ROUNDTRIP_CM;          // On convertis en distance avec la valeur donnée dans la librairie                              // On compte une mesure valide de plus
     }
-    i++;
-    delay(delayMesureCapteur);          // Delai entre deux mesures pour éviter les interférences
+    i++;         // Delai entre deux mesures pour éviter les interférences
   }
   return sum / NB_MESURES ;                 // On applique la moyenne
 }
@@ -354,22 +397,45 @@ float takeValue(int numCapteur)
 //Fonction de callback
 void detectObstacle()
 { //return la valeur du premier capteur qui detecte l'obstacle
+    //t.update();
+    Serial.println("J'entre");
     int i;
     bool hasObstacle = false;
     for(i = 0; i < NB_SONAR; i++) //on test tout les capteurs
     {
-        if(hasObstacle = echoCheck(i)) //si l'on est face a un obstacle
+        /*
+        Serial.print("Capteur numero ");
+        Serial.println(i);
+
+        //hasObstacle = echoCheck(1);
+        if(takeValue(i) < MAX_DISTANCE)
         {
-            arret(); //on arrete les moteurs
-            while(echoCheck(i)) //on attend qu'il n'y est plus d'obstacle
+            arret(moteurG,moteurD);
+            endProg();
+        }
+        */
+        hasObstacle = takeValue(i);
+        Serial.print(" 1. hasobstacle");
+        Serial.println(hasObstacle);
+        if(hasObstacle) //si l'on est face a un obstacle
+        {
+            arret(moteurG,moteurD); //on arrete les moteurs
+            while(takeValue(i)) //on attend qu'il n'y est plus d'obstacle
             {
+                t.update();
                 delay(100);
             }
+            Serial.println("Arret");
         }
-        Serial.println(distance[i]);
-        Serial.println(hasObstacle);
-        moteurG.run(); //on redemarre les moteurs
-        moteurD.run();
+        else
+        {
+            Serial.print("distance : ");
+            Serial.println(distance[i]);
+            Serial.print("hasObstacle : ");
+            Serial.println(hasObstacle);
+            moteurG.run(); //on redemarre les moteurs
+            moteurD.run();
+        }
     }
     Serial.println("Tick");
 }
@@ -389,24 +455,24 @@ boolean echoCheck(int numCapteur)
 
 
 ///Fonctions controle moteur
-int avancerPas(long parPas, int parVitesseMax)
+int avancerPas(AccelStepper parM1, AccelStepper parM2, long parPas, int parVitesseMax)
 {
 
-    //moteurG.setCurrentPosition(0);
-    //moteurD.setCurrentPosition(0);
-    moteurG.moveTo(parPas+moteurG.currentPosition());
-    moteurD.moveTo(parPas+moteurD.currentPosition());
-    /*while (moteurG.distanceToGo() > 0 || moteurD.distanceToGo() > 0)
+    parM1.setCurrentPosition(0);
+    parM2.setCurrentPosition(0);
+    parM1.moveTo(-parPas);
+    parM2.moveTo(parPas);
+    while (parM1.distanceToGo() > 0 || parM2.distanceToGo() > 0)
     {
-        moteurG.setSpeed(parVitesseMax);
-        moteurD.setSpeed(parVitesseMax);
-        moteurG.runSpeedToPosition();
-        moteurD.runSpeedToPosition();
-    }*/
-    moteurG.setSpeed(parVitesseMax);
+        parM1.setSpeed(parVitesseMax);
+        parM2.setSpeed(parVitesseMax);
+        parM1.runSpeedToPosition();
+        parM2.runSpeedToPosition();
+    }
+    /*moteurG.setSpeed(parVitesseMax);
     moteurD.setSpeed(parVitesseMax);
     moteurG.runSpeedToPosition();
-    moteurD.runSpeedToPosition();
+    moteurD.runSpeedToPosition();*/
     //delay(10000);
 }
 
@@ -481,13 +547,13 @@ void droite(int parAngle)
   gauche(-parAngle);
 }
 
-void arret()
+void arret(AccelStepper parM1, AccelStepper parM2)
 {
   /*
   parM1.setSpeed(0);
   parM2.setSpeed(0);
   currentVitesse = 0;
   */
-  moteurG.stop();
-  moteurD.stop();
+  parM1.stop();
+  parM2.stop();
 }

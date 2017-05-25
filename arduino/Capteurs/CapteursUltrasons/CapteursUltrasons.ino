@@ -17,8 +17,8 @@
   /*
    *  Raccordement: rentrez le numéro de pin trig et echo ici, sur lesquels vous avez branché pin et trig
    */
-#define trigPin 12
-#define echoPin 11
+#define trigPin 17
+#define echoPin 16
 
   /*
    * Ici on définit la distance max de détection voulue sur les capteurs, laissez par défault si vous ne savez pas.
@@ -66,7 +66,7 @@ float takeValue(NewPing sonar)
 
 
 
-/*NewPing sonarGauche(trigPin, echoPin, MAX_DISTANCE);
+NewPing sonarGauche(trigPin, echoPin, MAX_DISTANCE);
 //Fonction appliquée au démarrage
 void setup() {
   Serial.begin (19200); //Pour pouvoir écrire sur le moniteur
@@ -81,6 +81,6 @@ void loop() {
 
   Serial.print(uS);
   Serial.println(" cm");
-  //delay(250);
+  delay(50);
 
-}*/
+}
