@@ -19,6 +19,9 @@
 #include "Timer.h"
 #include <QueueArray.h>
 
+///CONFIGURATION
+#define LCDDDEBUG
+
 ///PORTS CONNECTES///
 //Ultrasons//
 #define trigPin1 17
@@ -76,7 +79,7 @@ Ici on définit la distance max de détection voulue sur les capteurs, laissez p
 #define NB_SONAR 2
 #define MAX_DISTANCE 100
 #define VITESSE_SON 340.0
-#define DISTANCE_OB 20
+#define DISTANCE_OB 20.0
 
 const float delayMesureCapteur =  int(((2*MAX_DISTANCE)/(VITESSE_SON))*1000);
 #define DELAI_MESURES_CAPTEURS 1
@@ -109,6 +112,7 @@ int buf[64] = {0};
 ///INITIALISATION OBJETS
 //Le Timer principal
 Timer t;
+Timer t2;
 //Ecran LCD//
 rgb_lcd lcd;
 //Capteurs ultra-sons//
@@ -142,6 +146,7 @@ void droite(int parAngle);
 void arret(AccelStepper parM1, AccelStepper parM2);
 void afficherLCD(char msg[]);
 int envoyer(char cmd[]);
+void updateTimers();
 
 ///INITIALISATION PROGRAMME///
 void setup()
@@ -204,6 +209,7 @@ void setup()
     SPI.attachInterrupt();*/
     Serial.println("SPI done");
 
+    #ifdef LCDDEBUG
     lcd.begin(16,2);
     lcd.clear();
     lcd.setRGB(colorR,colorG,colorB);
@@ -211,19 +217,18 @@ void setup()
     lcd.setCursor(0, 1);
     lcd.print("----INSA cvl----");
     Serial.println("LCD done");
+    #else
+    #ifndef LCDDEBUG
+    Serial.println("Pas de LCD");
+    #endif
+    #endif
 
     //déterminer les codes d'instruction
-    queue.push(1);
+    for(int i=0; i<8; i++)
+    {
     queue.push(2);
-    queue.push(150);
-    queue.push(2);
-    queue.push(150);
-    queue.push(2);
-    queue.push(150);
-    queue.push(2);
-    queue.push(150);
-    queue.push(2);
-    queue.push(150);
+    queue.push(50);
+    }
     Serial.println("Liste de tache done");
 
     //Initialisation tirette
@@ -233,7 +238,8 @@ void setup()
     }
 
     //Initialisation timer
-    t.after(90000, endProg);
+    t.every(500, detectObstacle);
+    t2.after(90000, endProg);
     Serial.println("Tirette et timer done");
 
     Serial.println("Fin d'initialisation");
@@ -243,20 +249,24 @@ void setup()
 ///BOUCLE PRINCIPALE///
 void loop()
 {
-    t.update();
+    updateTimers();
     //Serial.println("UPDATE");
 
     long position[2];
 
     while(!queue.isEmpty())
     {
-        t.update(); //Oblige ?
+        updateTimers(); //Oblige ?
         switch(queue.pop())
         {
             case 1: //LECTURE CAPTEUR
+
+            #ifdef LCDDEBUG
             lcd.print("     _    _     ");
             lcd.setCursor(0, 1);
             lcd.print("     o    o     ");
+            #endif
+
             for (int i = 0; i < NB_SONAR; i++)
             {
                 Serial.print("valeur capteur ");
@@ -268,9 +278,14 @@ void loop()
             break;
 
             case 2: //AVANCER D'UN CERTAIN NOMBRE DE PAS
+
+            #ifdef LCDDEBUG
+            Serial.println("LCD TEST");
             lcd.print("     ^    ^     ");
             lcd.setCursor(0, 1);
             lcd.print("     o    o     ");
+            #endif
+
             avancerPas(moteurG,moteurD,queue.pop(), vitesse_max_ent);
             break;
 
@@ -281,9 +296,13 @@ void loop()
             break;
 
             case 5: //AVANCER PENDANT UN CERTAIN TEMPS
+
+            #ifdef LCDDEBUG
             lcd.print("     O    O     ");
             lcd.setCursor(0, 1);
             lcd.print("       []       ");
+            #endif
+
             avancerTemps(queue.pop(), vitesse_max_ent);
             break;
 
@@ -301,7 +320,16 @@ void loop()
             break;
         }
     }
-    endProg();
+    //endProg();
+
+    moteurG.disableOutputs();
+    moteurD.disableOutputs();
+    while(1)
+    {
+            //t.update();
+            updateTimers();
+    }
+
 
 }
 
@@ -341,6 +369,7 @@ float takeValue(int numCapteur)
         }
         //Serial.println(delayMesureCapteur); // Delai entre deux mesures pour éviter les interférences
         i++;
+        delay(DELAI_MESURES_CAPTEURS);
     }
     return sum / NB_MESURES ; // On applique la moyenne
 }
@@ -348,8 +377,9 @@ float takeValue(int numCapteur)
 //Fonction de callback pour détecter les obstacles --> A REVOIR
 void detectObstacle()
 {
+    Serial.println("Callback");
     //return la valeur du premier capteur qui detecte l'obstacle
-    t.update();
+    //t.update();
     int i;
     //bool hasObstacle = false;
     float distObstacle = 0.0;
@@ -369,12 +399,12 @@ void detectObstacle()
         distObstacle = takeValue(i);
         Serial.print("distObstacle : ");
         Serial.println(distObstacle);
-        if(distObstacle < DISTANCE_OB) //si l'on est face a un obstacle
+        if((distObstacle < DISTANCE_OB) && (distObstacle != 0.0)) //si l'on est face a un obstacle
         {
             arret(moteurG,moteurD); //on arrete les moteurs
             while(takeValue(i) < DISTANCE_OB) //on attend qu'il n'y est plus d'obstacle
             {
-                t.update();
+                //updateTimers();
                 delay(100);
             }
             Serial.println("Arret");
@@ -414,6 +444,7 @@ int avancerPas(AccelStepper parM1, AccelStepper parM2, long parPas, int parVites
     parM2.setCurrentPosition(0);
     parM1.moveTo(-parPas);
     parM2.moveTo(parPas);
+    updateTimers();
     while (parM1.distanceToGo() > 0 || parM2.distanceToGo() > 0)
     {
         parM1.setSpeed(parVitesseMax);
@@ -421,6 +452,7 @@ int avancerPas(AccelStepper parM1, AccelStepper parM2, long parPas, int parVites
         parM1.runSpeedToPosition();
         parM2.runSpeedToPosition();
     }
+    updateTimers();
 }
 
 //fonction pour faire avancer d'un nombre de pas en ligne droite le robot
@@ -467,4 +499,11 @@ void arret(AccelStepper parM1, AccelStepper parM2)
 {
     parM1.stop();
     parM2.stop();
+}
+
+//Fonction pour mettre a jour les timers
+void updateTimers()
+{
+    t.update();
+    t2.update();
 }
