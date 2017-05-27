@@ -162,6 +162,7 @@ void setup()
     }
     Serial.println("Servo done");
 
+    /* Initialisation des moteurs */
     /*
     pinMode(moteurGENA, OUTPUT);
     pinMode(moteurGENB, OUTPUT);
@@ -171,26 +172,6 @@ void setup()
     digitalWrite(moteurGENB, HIGH);
     digitalWrite(moteurDENA, HIGH);
     digitalWrite(moteurDENB, HIGH);*/
-
-    /* Benchmarking des moteurs
-    avancerPas(moteurG, moteurD, 1, 150);
-    delay(2000);
-    avancerPas(moteurG, moteurD, 2, 150);
-    delay(2000);
-    avancerPas(moteurG, moteurD, 3, 150);
-    delay(2000);
-    avancerPas(moteurG, moteurD, 4, 150);
-    delay(2000);
-
-    avancerPas(moteurG, moteurD, 2, 50);
-    delay(2000);
-    avancerPas(moteurG, moteurD, 2, 100);
-    delay(2000);
-    avancerPas(moteurG, moteurD, 2, 150);
-    delay(2000);
-    avancerPas(moteurG, moteurD, 2, 200);
-    delay(2000);
-    */
 
     moteurG.setMaxSpeed(400);// setMaxSpeed 400
     moteurD.setMaxSpeed(400);// setMaxSpeed 400
@@ -239,10 +220,30 @@ void setup()
 
     //Initialisation timer
     t.every(500, detectObstacle);
-    t2.after(90000, endProg);
+    //t2.after(90000, endProg);
     Serial.println("Tirette et timer done");
 
     Serial.println("Fin d'initialisation");
+
+    /* Partie de test */
+    Serial.println("===== Benchmarking des moteurs =====");
+    Serial.println("Vitesse fixe : 150 pas/sec");
+    for(int i=0; i<5; i++)
+    {
+        Serial.println("Pas : "+String(i));
+        avancerPas(moteurG, moteurD, i, 150);
+        delay(5000);
+    }
+
+    Serial.println("Pas constants : 2");
+    for(int i=0; i<5; i++)
+    {
+        Serial.println("Vitesse : "+String(50*i));
+        avancerPas(moteurG, moteurD, 2, 50*i);
+        delay(2000);
+    }
+    Serial.println("Fin des tests : desactivation des moteurs");
+    debug();
 }
 
 
@@ -321,14 +322,7 @@ void loop()
         }
     }
     //endProg();
-
-    moteurG.disableOutputs();
-    moteurD.disableOutputs();
-    while(1)
-    {
-            //t.update();
-            updateTimers();
-    }
+    debug();
 
 
 }
@@ -506,4 +500,17 @@ void updateTimers()
 {
     t.update();
     t2.update();
+}
+
+void debug()
+{
+
+
+    moteurG.disableOutputs();
+    moteurD.disableOutputs();
+    while(1)
+    {
+            //t.update();
+            updateTimers();
+    }
 }
