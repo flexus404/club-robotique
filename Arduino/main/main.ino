@@ -1,9 +1,10 @@
 ///TRUC A FAIRE
 /*
-* déplacer le bouton d'arret d'urgance en haut de la CATAPUUUULTE
 * ajouter des capteurs
 * +ecran lcd
-* reprendre le code de la fonction de callback pour mieux gérer les multiple capteurs
+* reprendre le code de la fonction de callback pour mieux gérer les multiples capteurs
+*
+* Repenser à tout remettre dans des fichiers splités
 */
 
 ///INCLUDES///
@@ -110,7 +111,7 @@ int buf[64] = {0};
 
 
 ///INITIALISATION OBJETS
-//Le Timer principal
+//Deux timers
 Timer t;
 Timer t2;
 //Ecran LCD//
@@ -134,19 +135,25 @@ Servo servos[NB_SERVO] =
 };
 
 ///PROTOTYPES///
-void endProg(); //fonction executée à la fin du programme
-void funnyaction();
+
 boolean echoCheck(int numCapteur);
+
 float takeValue(int numCapteur);
-void detectObstacle();
+
 int avancerPas(AccelStepper parM1, AccelStepper parM2, long parPas, int parVitesseMax);
 int avancerTemps(unsigned long parTemps, int parVitesseMax);
-void gauche(int parAngle);
-void droite(int parAngle);
-void arret(AccelStepper parM1, AccelStepper parM2);
-void afficherLCD(char msg[]);
 int envoyer(char cmd[]);
+
+void afficherLCD(char msg[]);
+void arret(AccelStepper parM1, AccelStepper parM2);
+void detectObstacle();
+void droite(int parAngle);
+void endProg(); //fonction executée à la fin du programme
+void funnyaction();
+void gauche(int parAngle);
+void debug();
 void updateTimers();
+
 
 ///INITIALISATION PROGRAMME///
 void setup()
@@ -204,16 +211,19 @@ void setup()
     #endif
     #endif
 
-    //déterminer les codes d'instruction
+    /*  Determine les codes d'instruction
+        ici on fait 8 * 50 pas pour les moteurs */
+
     for(int i=0; i<8; i++)
     {
-    queue.push(2);
-    queue.push(50);
+        queue.push(2);
+        queue.push(50);
     }
-    Serial.println("Liste de tache done");
+    Serial.println("Liste de taches done");
 
     //Initialisation tirette
     pinMode(tirette, INPUT);
+    /* Tnat que l'on active pas la tirette, le robot est en attente */
     while(digitalRead(tirette)==HIGH)
     {
     }
@@ -223,6 +233,7 @@ void setup()
     //t2.after(90000, endProg);
     Serial.println("Tirette et timer done");
 
+    /* ======= */
     Serial.println("Fin d'initialisation");
 
     /* Partie de test */
@@ -504,8 +515,6 @@ void updateTimers()
 
 void debug()
 {
-
-
     moteurG.disableOutputs();
     moteurD.disableOutputs();
     while(1)
