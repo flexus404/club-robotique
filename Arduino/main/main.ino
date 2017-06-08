@@ -64,7 +64,8 @@
 //Moteurs pas à pas//
 const int nbPasMoteur = 400;
 const float taille_roue = 7.62;
-const int vitesse_max_ent = 100;
+const int vitesse_max_ent = 200;
+boolean etatRoue = false;
 
 //Ecran LCD RGB//
 const int colorR = 0;
@@ -81,11 +82,11 @@ Ici on définit la distance max de détection voulue sur les capteurs, laissez p
 #define VITESSE_SON 340.0
 #define DISTANCE_OB 20.0
 
-const float delayMesureCapteur =  int(((2*MAX_DISTANCE)/(VITESSE_SON))*1000);
+const   float delayMesureCapteur =  int(((2*MAX_DISTANCE)/(VITESSE_SON))*1000);
 #define DELAI_MESURES_CAPTEURS 1
 
 //Controle moteur
-const int nb_pas_360 = 500; //Valeur à trouver de facon empirique
+const  int nb_pas_360 = 500; //Valeur à trouver de facon empirique
 static int currentVitesse = 0;
 static int currentDistanceG = 0;
 static int currentDistanceD = 0;
@@ -96,17 +97,16 @@ static int currentDistanceD = 0;
 ///COMMANDES///
 
 ///VARIABLES GLOBALES///
-//int queue[128] = {0}; //LA file d'instruction
 //typedef int[2] commande;
+bool             process_it;
 QueueArray <int> queue;
+unsigned int     distance[NB_SONAR];
+int              buf[64] = {0};
+int              CapteurActuel = 0;
+int              i = 0;
+//int              queue[128] = {0}; //LA file d'instruction
+float            uS;
 
-unsigned int distance[NB_SONAR];
-int CapteurActuel = 0;
-float uS;
-int i = 0;
-bool process_it;
-int pos = 0;
-int buf[64] = {0};
 
 
 ///INITIALISATION OBJETS
@@ -139,6 +139,7 @@ void funnyaction();
 boolean echoCheck(int numCapteur);
 float takeValue(int numCapteur);
 void detectObstacle();
+void demarrerPas(AccelStepper parM1, AccelStepper parM2, boolean roueEnMarche);
 int avancerPas(AccelStepper parM1, AccelStepper parM2, long parPas, int parVitesseMax);
 int avancerTemps(unsigned long parTemps, int parVitesseMax);
 void gauche(int parAngle);
@@ -147,18 +148,17 @@ void arret(AccelStepper parM1, AccelStepper parM2);
 void afficherLCD(char msg[]);
 int envoyer(char cmd[]);
 void updateTimers();
+void debug();
 
 ///INITIALISATION PROGRAMME///
 void setup()
 {
     Serial.begin (19200); //Pour pouvoir écrire sur le moniteur
-
     Serial.println("Ping done");
 
     for (i = 0; i < NB_SERVO; i++)
     {
         servos[i].attach(servoFunny + i);
-        //servos[i].write(0);
     }
     Serial.println("Servo done");
 
@@ -171,26 +171,6 @@ void setup()
     digitalWrite(moteurGENB, HIGH);
     digitalWrite(moteurDENA, HIGH);
     digitalWrite(moteurDENB, HIGH);*/
-
-    /* Benchmarking des moteurs
-    avancerPas(moteurG, moteurD, 1, 150);
-    delay(2000);
-    avancerPas(moteurG, moteurD, 2, 150);
-    delay(2000);
-    avancerPas(moteurG, moteurD, 3, 150);
-    delay(2000);
-    avancerPas(moteurG, moteurD, 4, 150);
-    delay(2000);
-
-    avancerPas(moteurG, moteurD, 2, 50);
-    delay(2000);
-    avancerPas(moteurG, moteurD, 2, 100);
-    delay(2000);
-    avancerPas(moteurG, moteurD, 2, 150);
-    delay(2000);
-    avancerPas(moteurG, moteurD, 2, 200);
-    delay(2000);
-    */
 
     moteurG.setMaxSpeed(400);// setMaxSpeed 400
     moteurD.setMaxSpeed(400);// setMaxSpeed 400
@@ -223,12 +203,13 @@ void setup()
     #endif
     #endif
 
-    //déterminer les codes d'instruction
-    for(int i=0; i<8; i++)
+    /* Initialisation des codes d'instruction */
+    for(int i=0; i<10; i++)
     {
-    queue.push(2);
-    queue.push(50);
+        queue.push(2);
+        queue.push(150);
     }
+
     Serial.println("Liste de tache done");
 
     //Initialisation tirette
@@ -239,10 +220,23 @@ void setup()
 
     //Initialisation timer
     t.every(500, detectObstacle);
-    t2.after(90000, endProg);
+    //t2.after(90000, endProg);
     Serial.println("Tirette et timer done");
 
     Serial.println("Fin d'initialisation");
+
+    /* Benchmarking des moteurs
+    Serial.println("Debut benchmarking moteurs");
+    Serial.println("Pas constant");
+    // Vitesse semble
+    for(int i=0; i<5; i++)
+    {
+        Serial.println("Vitesse i = "+String(175+i*25));
+        avancerPas(moteurG, moteurD, 150, 175+25*i);
+        delay(5000);
+    }
+    Serial.println("Fin benchmarking moteurs");
+    */
 }
 
 
@@ -250,7 +244,9 @@ void setup()
 void loop()
 {
     updateTimers();
-    //Serial.println("UPDATE");
+
+    /* UTILISATION POUR LES TESTS */
+    //debug();
 
     long position[2];
 
@@ -286,6 +282,7 @@ void loop()
             lcd.print("     o    o     ");
             #endif
 
+            demarrerPas(moteurG, moteurD, etatRoue);
             avancerPas(moteurG,moteurD,queue.pop(), vitesse_max_ent);
             break;
 
@@ -306,6 +303,7 @@ void loop()
             avancerTemps(queue.pop(), vitesse_max_ent);
             break;
 
+            /*
             case 6: //LECTURE DU MOSI SUR LE REGISTRE SPI
             if (process_it)
             {
@@ -315,22 +313,16 @@ void loop()
                 process_it = false;
             }
             break;
+            */
 
             default:
-            break;
+                etatRoue = false;
+                break;
         }
     }
+
     //endProg();
-
-    moteurG.disableOutputs();
-    moteurD.disableOutputs();
-    while(1)
-    {
-            //t.update();
-            updateTimers();
-    }
-
-
+    debug();
 }
 
 ///FONCTION DE FIN DE PROGRAMME
@@ -383,7 +375,7 @@ void detectObstacle()
     int i;
     //bool hasObstacle = false;
     float distObstacle = 0.0;
-    for(i = 0; i < NB_SONAR; i++) //on test tout les capteurs, on peut décider d'esquiver l'obstacle
+    for(i = 0; i < 1; i++) //on test tout les capteurs, on peut décider d'esquiver l'obstacle
     {
             /*
             Serial.print("Capteur numero ");
@@ -401,13 +393,15 @@ void detectObstacle()
         Serial.println(distObstacle);
         if((distObstacle < DISTANCE_OB) && (distObstacle != 0.0)) //si l'on est face a un obstacle
         {
+            distObstacle = takeValue(i);
+            Serial.println("Arret des moteurs");
             arret(moteurG,moteurD); //on arrete les moteurs
-            while(takeValue(i) < DISTANCE_OB) //on attend qu'il n'y est plus d'obstacle
+            while(distObstacle < DISTANCE_OB) //on attend qu'il n'y est plus d'obstacle
             {
                 //updateTimers();
                 delay(100);
+                distObstacle = takeValue(i);
             }
-            Serial.println("Arret");
         }
         else
         {
@@ -439,20 +433,41 @@ boolean echoCheck(int numCapteur)
 //fonction pour faire avancer d'un nombre de pas en ligne droite le robot -> A REVOIR
 int avancerPas(AccelStepper parM1, AccelStepper parM2, long parPas, int parVitesseMax)
 {
-
+    etatRoue = false;
     parM1.setCurrentPosition(0);
     parM2.setCurrentPosition(0);
     parM1.moveTo(-parPas);
     parM2.moveTo(parPas);
-    updateTimers();
+
     while (parM1.distanceToGo() > 0 || parM2.distanceToGo() > 0)
     {
+        updateTimers();
         parM1.setSpeed(parVitesseMax);
         parM2.setSpeed(parVitesseMax);
         parM1.runSpeedToPosition();
         parM2.runSpeedToPosition();
     }
-    updateTimers();
+}
+
+void demarrerPas(AccelStepper parM1, AccelStepper parM2, boolean roueEnMarche)
+{
+    if(!roueEnMarche)
+    {
+        etatRoue = true;
+        parM1.setCurrentPosition(0);
+        parM2.setCurrentPosition(0);
+        parM1.moveTo(-50);
+        parM2.moveTo(50);
+    
+        while (parM1.distanceToGo() > 0 || parM2.distanceToGo() > 0)
+        {
+            updateTimers();
+            parM1.setSpeed(100);
+            parM2.setSpeed(100);
+            parM1.runSpeedToPosition();
+            parM2.runSpeedToPosition();
+        }
+    }
 }
 
 //fonction pour faire avancer d'un nombre de pas en ligne droite le robot
@@ -497,6 +512,7 @@ void droite(int parAngle)
 //fonction d'arret des moteurs
 void arret(AccelStepper parM1, AccelStepper parM2)
 {
+    etatRoue = false;
     parM1.stop();
     parM2.stop();
 }
@@ -506,4 +522,15 @@ void updateTimers()
 {
     t.update();
     t2.update();
+}
+
+//Fonction qui coupe les moteurs et cree une boucle infinie
+void debug()
+{
+    moteurG.disableOutputs();
+    moteurD.disableOutputs();
+    while(1)
+    {
+        updateTimers();
+    }
 }
